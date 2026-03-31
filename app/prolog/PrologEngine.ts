@@ -16,6 +16,12 @@ class PrologEngine {
     this.session = this.pl.create();
   }
 
+  async loadPrograms(prologFiles: string[]): Promise<void> {
+    for (const code of prologFiles) {
+      await this.loadProgram(code);
+    }
+  }
+
   /**
    * Carga un programa Prolog desde un string
    */

@@ -2,7 +2,7 @@ import { Slot } from "expo-router";
 import { useEffect, useState } from "react";
 import { ActivityIndicator, StyleSheet, Text, View } from "react-native";
 import { prologEngine } from "./prolog/PrologEngine";
-import { GAME_PROLOG } from "./prolog/game";
+import { dinamicos } from "./prolog/pl/dinamicos";
 
 export default function RootLayout() {
   const [ready, setReady] = useState(false);
@@ -11,7 +11,7 @@ export default function RootLayout() {
   useEffect(() => {
     (async () => {
       try {
-        await prologEngine.loadProgram(GAME_PROLOG);
+        await prologEngine.loadPrograms([dinamicos]);
         setReady(true);
       } catch (e: any) {
         setError(e.message);
