@@ -9,7 +9,7 @@ export default function MenuScreen() {
       <Text style={styles.title}>Pokémon Prolog</Text>
       <TouchableOpacity
         style={styles.btn}
-        onPress={() => router.push("/world")}
+        //onPress={() => router.push("/world")}
       >
         <Text style={styles.btnText}>Nueva partida</Text>
       </TouchableOpacity>

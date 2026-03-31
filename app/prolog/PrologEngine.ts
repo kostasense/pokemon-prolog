@@ -1,18 +1,19 @@
-import pl from "tau-prolog";
-
-// Extiende Tau Prolog con modulos necesarios
-import "tau-prolog/modules/js"; // Interop JS↔Prolog
-import "tau-prolog/modules/lists";
+/* eslint-disable @typescript-eslint/no-require-imports */
+import "./patchProcess";
 
 type Substitution = Record<string, any>;
 
 class PrologEngine {
   private session: any;
   private initialized = false;
+  private pl: any;
 
   constructor() {
-    // 1000 = limite de pasos de inferencia (ajusta segun necesidad)
-    this.session = pl.create(1000);
+    // Cargar tau-prolog y sus modulos
+    this.pl = require("tau-prolog/modules/core.js");
+    require("tau-prolog/modules/lists.js")(this.pl);
+
+    this.session = this.pl.create();
   }
 
   /**
@@ -20,7 +21,9 @@ class PrologEngine {
    */
   async loadProgram(prologCode: string): Promise<void> {
     return new Promise((resolve, reject) => {
-      this.session.consult(prologCode, {
+      // Asegurar que el programa termina con salto de línea
+      const code = prologCode.trimEnd() + "\n";
+      this.session.consult(code, {
         success: () => {
           this.initialized = true;
           resolve();
@@ -28,7 +31,7 @@ class PrologEngine {
         error: (err: any) => {
           reject(
             new Error(
-              `Error al cargar programa Prolog: ${pl.format_answer(err)}`,
+              `Error al cargar programa Prolog: ${this.pl.format_answer(err)}`,
             ),
           );
         },
@@ -42,10 +45,12 @@ class PrologEngine {
   async queryAll(goal: string): Promise<Substitution[]> {
     if (!this.initialized) throw new Error("Motor Prolog no inicializado");
 
+    const goalWithDot = goal.trimEnd().endsWith(".") ? goal : `${goal}.`;
+
     return new Promise((resolve, reject) => {
       const solutions: Substitution[] = [];
 
-      this.session.query(goal, {
+      this.session.query(goalWithDot, {
         success: () => {
           const getNext = () => {
             this.session.answer({
@@ -61,7 +66,8 @@ class PrologEngine {
                 getNext(); // Busca siguiente solucion
               },
               fail: () => resolve(solutions), // No mas soluciones
-              error: (err: any) => reject(new Error(pl.format_answer(err))),
+              error: (err: any) =>
+                reject(new Error(this.pl.format_answer(err))),
               limit: () => resolve(solutions), // Limite de pasos alcanzado
             });
           };
@@ -69,7 +75,9 @@ class PrologEngine {
         },
         error: (err: any) =>
           reject(
-            new Error(`Query inválida: ${goal} — ${pl.format_answer(err)}`),
+            new Error(
+              `Query inválida: ${goalWithDot} — ${this.pl.format_answer(err)}`,
+            ),
           ),
       });
     });

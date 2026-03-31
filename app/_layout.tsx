@@ -2,7 +2,7 @@ import { Slot } from "expo-router";
 import { useEffect, useState } from "react";
 import { ActivityIndicator, StyleSheet, Text, View } from "react-native";
 import { prologEngine } from "./prolog/PrologEngine";
-import GAME_PROLOG from "./prolog/game.pl";
+import { GAME_PROLOG } from "./prolog/game";
 
 export default function RootLayout() {
   const [ready, setReady] = useState(false);
