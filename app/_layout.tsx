@@ -3,6 +3,9 @@ import { useEffect, useState } from "react";
 import { ActivityIndicator, StyleSheet, Text, View } from "react-native";
 import { prologEngine } from "./prolog/PrologEngine";
 import { dinamicos } from "./prolog/pl/dinamicos";
+import { evolutions } from "./prolog/pl/evolutions";
+import { types } from "./prolog/pl/types";
+import { wild_pokemon } from "./prolog/pl/wild_pokemon";
 
 export default function RootLayout() {
   const [ready, setReady] = useState(false);
@@ -11,7 +14,12 @@ export default function RootLayout() {
   useEffect(() => {
     (async () => {
       try {
-        await prologEngine.loadPrograms([dinamicos]);
+        await prologEngine.loadPrograms([
+          types,
+          wild_pokemon,
+          evolutions,
+          dinamicos,
+        ]);
         setReady(true);
       } catch (e: any) {
         setError(e.message);
