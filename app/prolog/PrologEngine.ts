@@ -1,8 +1,8 @@
-import pl from 'tau-prolog';
+import pl from "tau-prolog";
 
 // Extiende Tau Prolog con modulos necesarios
-import 'tau-prolog/modules/lists';
-import 'tau-prolog/modules/js';   // Interop JS↔Prolog
+import "tau-prolog/modules/js"; // Interop JS↔Prolog
+import "tau-prolog/modules/lists";
 
 type Substitution = Record<string, any>;
 
@@ -26,8 +26,12 @@ class PrologEngine {
           resolve();
         },
         error: (err: any) => {
-          reject(new Error(`Error al cargar programa Prolog: ${pl.format_answer(err)}`));
-        }
+          reject(
+            new Error(
+              `Error al cargar programa Prolog: ${pl.format_answer(err)}`,
+            ),
+          );
+        },
       });
     });
   }
@@ -36,7 +40,7 @@ class PrologEngine {
    * Ejecuta una query y devuelve TODAS las soluciones
    */
   async queryAll(goal: string): Promise<Substitution[]> {
-    if (!this.initialized) throw new Error('Motor Prolog no inicializado');
+    if (!this.initialized) throw new Error("Motor Prolog no inicializado");
 
     return new Promise((resolve, reject) => {
       const solutions: Substitution[] = [];
@@ -54,22 +58,25 @@ class PrologEngine {
                   }
                 }
                 solutions.push(sub);
-                getNext(); // Busca siguiente solución
+                getNext(); // Busca siguiente solucion
               },
-              fail: () => resolve(solutions),   // No más soluciones
+              fail: () => resolve(solutions), // No mas soluciones
               error: (err: any) => reject(new Error(pl.format_answer(err))),
-              limit: () => resolve(solutions),   // Límite de pasos alcanzado
+              limit: () => resolve(solutions), // Limite de pasos alcanzado
             });
           };
           getNext();
         },
-        error: (err: any) => reject(new Error(`Query inválida: ${goal} — ${pl.format_answer(err)}`)),
+        error: (err: any) =>
+          reject(
+            new Error(`Query inválida: ${goal} — ${pl.format_answer(err)}`),
+          ),
       });
     });
   }
 
   /**
-   * Ejecuta una query y devuelve solo la PRIMERA solución
+   * Ejecuta una query y devuelve solo la PRIMERA solucion
    */
   async queryOne(goal: string): Promise<Substitution | null> {
     const all = await this.queryAll(goal);
@@ -106,24 +113,24 @@ class PrologEngine {
     if (!term) return null;
 
     switch (term.indicator) {
-      case './2': {
+      case "./2": {
         // Lista Prolog → Array JS
         const arr: any[] = [];
         let current = term;
-        while (current.indicator === './2') {
+        while (current.indicator === "./2") {
           arr.push(this.termToJS(current.args[0]));
           current = current.args[1];
         }
         return arr;
       }
-      case '[]/0':
+      case "[]/0":
         return [];
       default:
         // Atomo, numero, etc.
         if (term.args && term.args.length > 0) {
           return {
             functor: term.id,
-            args: term.args.map((a: any) => this.termToJS(a))
+            args: term.args.map((a: any) => this.termToJS(a)),
           };
         }
         return term.id !== undefined ? term.id : term.value;
