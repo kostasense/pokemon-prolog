@@ -1,11 +1,11 @@
 import { Slot } from "expo-router";
 import { useEffect, useState } from "react";
 import { ActivityIndicator, StyleSheet, Text, View } from "react-native";
-import { prologEngine } from "./prolog/PrologEngine";
-import { dinamicos } from "./prolog/pl/dinamicos";
-import { evolutions } from "./prolog/pl/evolutions";
-import { types } from "./prolog/pl/types";
-import { wild_pokemon } from "./prolog/pl/wild_pokemon";
+import { prologEngine } from "../src/prolog/PrologEngine";
+import { dinamicos } from "../src/prolog/pl/dinamicos";
+import { evolutions } from "../src/prolog/pl/evolutions";
+import { types } from "../src/prolog/pl/types";
+import { wild_pokemon } from "../src/prolog/pl/wild_pokemon";
 
 export default function RootLayout() {
   const [ready, setReady] = useState(false);
@@ -14,11 +14,12 @@ export default function RootLayout() {
   useEffect(() => {
     (async () => {
       try {
+        await prologEngine.init();
         await prologEngine.loadPrograms([
+          dinamicos,
           types,
           wild_pokemon,
           evolutions,
-          dinamicos,
         ]);
         setReady(true);
       } catch (e: any) {
