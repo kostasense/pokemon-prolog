@@ -1,25 +1,41 @@
-import type { Answer } from "trealla";
-import { Prolog } from "trealla";
+/* eslint-disable @typescript-eslint/no-require-imports */
+import "./patchProcess"; // DEBE ser el primer import — parchea globals antes de cargar tau-prolog
 
 type Substitution = Record<string, any>;
 
 class PrologEngine {
-  private pl: Prolog | null = null;
+  private session: any;
   private initialized = false;
-  private programParts: string[] = [];
+  private pl: any;
 
-  async init(): Promise<void> {
-    this.pl = new Prolog();
-    await this.pl.init();
+  constructor() {
+    // require() dentro del constructor garantiza que patchProcess
+    // ya se ejecutó antes de que core.js intente leer process.browser,
+    // window, document, etc.
+    this.pl = require("tau-prolog/modules/core.js");
+    require("tau-prolog/modules/lists.js")(this.pl);
+
+    this.session = this.pl.create(Infinity);
   }
 
   async loadProgram(prologCode: string): Promise<void> {
-    if (!this.pl)
-      throw new Error("Motor no inicializado — llama init() primero");
-    this.programParts.push(prologCode);
-    // consultText carga el string directamente como programa Prolog
-    await this.pl.consultText(prologCode);
-    this.initialized = true;
+    return new Promise((resolve, reject) => {
+      // Asegurar que el programa termina con salto de linea
+      const code = prologCode.trimEnd() + "\n";
+      this.session.consult(code, {
+        success: () => {
+          this.initialized = true;
+          resolve();
+        },
+        error: (err: any) => {
+          reject(
+            new Error(
+              `Error al cargar programa Prolog: ${this.pl.format_answer(err)}`,
+            ),
+          );
+        },
+      });
+    });
   }
 
   async loadPrograms(prologFiles: string[]): Promise<void> {
@@ -32,33 +48,53 @@ class PrologEngine {
    * Ejecuta una query y devuelve TODAS las soluciones
    */
   async queryAll(goal: string): Promise<Substitution[]> {
-    if (!this.pl || !this.initialized)
-      throw new Error("Motor Prolog no inicializado");
+    if (!this.initialized) throw new Error("Motor Prolog no inicializado");
 
-    const solutions: Substitution[] = [];
+    // tau-prolog requiere punto al final de cada query
+    const goalWithDot = goal.trimEnd().endsWith(".") ? goal : `${goal}.`;
 
-    // Trealla usa un iterador async — itera hasta agotar todas las soluciones
-    for await (const answer of this.pl.query(goal)) {
-      if (answer.status === "success") {
-        // answer.value ya es un objeto { Variable: valor } — no necesita conversión
-        solutions.push(answer.answer as Substitution); // Busca siguiente solucion
-      }
-    }
+    return new Promise((resolve, reject) => {
+      const solutions: Substitution[] = [];
 
-    return solutions;
+      this.session.query(goalWithDot, {
+        success: () => {
+          const getNext = () => {
+            this.session.answer({
+              success: (answer: any) => {
+                // Extrae las variables del answer
+                const sub: Substitution = {};
+                if (answer && answer.links) {
+                  for (const [varName, term] of Object.entries(answer.links)) {
+                    sub[varName] = this.termToJS(term);
+                  }
+                }
+                solutions.push(sub);
+                getNext(); // Busca siguiente solucion
+              },
+              fail: () => resolve(solutions), // No mas soluciones
+              error: (err: any) =>
+                reject(new Error(this.pl.format_answer(err))),
+              limit: () => resolve(solutions), // Limite de pasos alcanzado
+            });
+          };
+          getNext();
+        },
+        error: (err: any) =>
+          reject(
+            new Error(
+              `Query inválida: ${goalWithDot} — ${this.pl.format_answer(err)}`,
+            ),
+          ),
+      });
+    });
   }
 
   /**
    * Ejecuta una query y devuelve solo la PRIMERA solucion
    */
   async queryOne(goal: string): Promise<Substitution | null> {
-    if (!this.pl || !this.initialized)
-      throw new Error("Motor Prolog no inicializado");
-
-    // queryOnce es más eficiente que queryAll cuando solo necesitas una solución
-    const answer: Answer = await this.pl.queryOnce(goal);
-    if (answer.status === "success") return answer.answer as Substitution;
-    return null; // No mas soluciones / fallo
+    const all = await this.queryAll(goal);
+    return all.length > 0 ? all[0] : null;
   }
 
   /**
@@ -86,9 +122,6 @@ class PrologEngine {
 
   /**
    * Convierte un termino Prolog a valor JavaScript
-   * Trealla ya devuelve valores JS nativos en answer.answer,
-   * pero este metodo se mantiene por compatibilidad por si se
-   * necesita procesar terminos manualmente en el futuro
    */
   private termToJS(term: any): any {
     if (!term) return null;
