@@ -1,4 +1,7 @@
 export const pokemon = `
+    % starter pokemon
+    starters([charmander, bulbasaur, squirtle]).    
+
     % types
     % ===== NORMAL =====
     type(eevee,          normal).
