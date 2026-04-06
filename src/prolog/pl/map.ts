@@ -55,13 +55,13 @@ export const map = `
     map(pacifidlog,     'Pacifidlog Town').
     map(evergrande,     'Ever Grande City').
     
-    % gymnasium(city,       leader,     numberOfFights,  level,   badge)
-    gymnasium(rustboro,     roxxane,    1,               10,      stone).
-    gymnasium(mauville,     brawly,     2,               14,      dynamo).
-    gymnasium(lavaridge,    flannery,   3,               19,      heat).
-    gymnasium(lilycove,     winona,     4,               24,      feather).
-    gymnasium(mossdeep,     brawly,     5,               29,      knuckle).
-    gymnasium(sootopolis,   wallace,    6,               34,      rain).
+    % gymnasium(city,       leader,     numberOfFights,  badge)
+    gymnasium(rustboro,     roxxane,    1,               stone).
+    gymnasium(mauville,     brawly,     2,               dynamo).
+    gymnasium(lavaridge,    flannery,   3,               heat).
+    gymnasium(lilycove,     winona,     4,               feather).
+    gymnasium(mossdeep,     brawly,     5,               knuckle).
+    gymnasium(sootopolis,   wallace,    6,               rain).
     
     % possible locations in cityA
     city(A, [square, store, hospital, gymnasium]):- gymnasium(A, _, _, _, _).

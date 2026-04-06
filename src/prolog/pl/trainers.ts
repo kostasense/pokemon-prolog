@@ -25,4 +25,12 @@ export const trainers = `
     trainer(123,     jenna,         0,          poliwrath,         no).
     trainer(124,     carlos,        0,          gengar,            no).
     trainer(125,     alyssa,        0,          mimikyu,           no).
+
+    % gymLeader(leader,     level,  [team],                                                                 defeated)
+    gymLeader(roxxane,      10,     [jigglypuff],                                                           no).
+    gymLeader(brawly,       14,     [vulpix, ponyta],                                                       no).
+    gymLeader(flannery,     19,     [charmeleon, flareon, ninetales],                                       no).
+    gymLeader(winona,       24,     [blastoise, poliwrath, pidgeotto, wigglytuff],                          no).
+    gymLeader(brawly,       29,     [chandelure, gengar, venusaur, vileplume, charizard],                   no).
+    gymLeader(wallace,      34,     [vaporeon, blastoise, mimikyu, ninetales, poliwrath, pidgeot],          no).
 `;
