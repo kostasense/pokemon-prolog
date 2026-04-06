@@ -1,4 +1,5 @@
-import { Slot } from "expo-router";
+import { useFonts } from "expo-font";
+import { Slot, SplashScreen } from "expo-router";
 import { useEffect, useState } from "react";
 import { ActivityIndicator, StyleSheet, Text, View } from "react-native";
 import { prologEngine } from "../src/prolog/PrologEngine";
@@ -7,10 +8,17 @@ import { evolutions } from "../src/prolog/pl/evolutions";
 import { types } from "../src/prolog/pl/types";
 import { wild_pokemon } from "../src/prolog/pl/wild_pokemon";
 
-export default function RootLayout() {
-  const [ready, setReady] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+SplashScreen.preventAutoHideAsync();
 
+export default function RootLayout() {
+  const [prologReady, setPrologReady] = useState(false);
+  const [prologError, setPrologError] = useState<string | null>(null);
+
+  const [fontsLoaded, fontError] = useFonts({
+    GameFont: require("../assets/pokemon.ttf"),
+  });
+
+  // ── Carga del motor Prolog ──────────────────────────────────────
   useEffect(() => {
     (async () => {
       try {
@@ -20,33 +28,43 @@ export default function RootLayout() {
           wild_pokemon,
           evolutions,
         ]);
-        setReady(true);
+        setPrologReady(true);
       } catch (e: any) {
-        setError(e.message);
+        setPrologError(e.message);
       }
     })();
   }, []);
 
-  if (error)
+  // ── Ocultar splash cuando ambos estén listos ───────────────────
+  useEffect(() => {
+    if ((fontsLoaded || fontError) && (prologReady || prologError)) {
+      SplashScreen.hideAsync();
+    }
+  }, [fontsLoaded, fontError, prologReady, prologError]);
+
+  // ── Estados de carga ───────────────────────────────────────────
+  if (!fontsLoaded && !fontError) return null; // splash visible
+
+  if (prologError)
     return (
       <View style={styles.center}>
-        <Text style={styles.error}>Error Prolog: {error}</Text>
+        <Text style={styles.error}>Error Prolog: {prologError}</Text>
       </View>
     );
 
-  if (!ready)
+  if (!prologReady)
     return (
       <View style={styles.center}>
         <ActivityIndicator size="large" />
-        <Text>Iniciando motor Prolog...</Text>
+        <Text style={styles.loadingText}>Iniciando motor Prolog...</Text>
       </View>
     );
 
-  // <Slot> renderiza la pantalla activa (index, world, battle, etc.)
   return <Slot />;
 }
 
 const styles = StyleSheet.create({
-  center: { flex: 1, justifyContent: "center", alignItems: "center" },
-  error: { color: "red", padding: 20 },
+  center: { flex: 1, justifyContent: "center", alignItems: "center", gap: 12 },
+  error: { color: "red", padding: 20, fontFamily: "GameFont" },
+  loadingText: { fontFamily: "GameFont" },
 });

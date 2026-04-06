@@ -9,7 +9,7 @@ export default function MenuScreen() {
       <Text style={styles.title}>Pokémon Prolog</Text>
       <TouchableOpacity
         style={styles.btn}
-        //onPress={() => router.push("/world")}
+        onPress={() => router.push("/map" as any)}
       >
         <Text style={styles.btnText}>Nueva partida</Text>
       </TouchableOpacity>
@@ -24,7 +24,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     gap: 16,
   },
-  title: { fontSize: 32, fontWeight: "bold" },
+  title: { fontFamily: "GameFont", fontSize: 32, fontWeight: "bold" },
   btn: {
     backgroundColor: "#e63",
     padding: 14,
@@ -32,5 +32,10 @@ const styles = StyleSheet.create({
     minWidth: 180,
     alignItems: "center",
   },
-  btnText: { color: "#fff", fontSize: 16, fontWeight: "600" },
+  btnText: {
+    color: "#fff",
+    fontFamily: "GameFont",
+    fontSize: 16,
+    fontWeight: "bold",
+  },
 });
