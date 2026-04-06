@@ -1,5 +1,5 @@
 import { useFonts } from "expo-font";
-import { Slot, SplashScreen } from "expo-router";
+import { Slot } from "expo-router";
 import { useEffect, useState } from "react";
 import { ActivityIndicator, StyleSheet, Text, View } from "react-native";
 import { prologEngine } from "../src/prolog/PrologEngine";
@@ -8,8 +8,6 @@ import { evolutions } from "../src/prolog/pl/evolutions";
 import { types } from "../src/prolog/pl/types";
 import { wild_pokemon } from "../src/prolog/pl/wild_pokemon";
 
-SplashScreen.preventAutoHideAsync();
-
 export default function RootLayout() {
   const [prologReady, setPrologReady] = useState(false);
   const [prologError, setPrologError] = useState<string | null>(null);
@@ -17,12 +15,6 @@ export default function RootLayout() {
   const [fontsLoaded, fontError] = useFonts({
     GameFont: require("../assets/pokemon.ttf"),
   });
-
-  useEffect(() => {
-    if (fontsLoaded || fontError) {
-      SplashScreen.hideAsync();
-    }
-  }, [fontsLoaded, fontError]);
 
   useEffect(() => {
     (async () => {
