@@ -17,7 +17,7 @@ const HEAD_H = 34;
 
 export default function MapScreen() {
   const [playerLocationId, setPlayerLocationId] =
-    useState<string>("pueblo_inicial");
+    useState<string>("littleroot");
   const [message, setMessage] = useState("Elige una opción:");
 
   useEffect(() => {

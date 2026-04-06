@@ -1,15 +1,7 @@
 /**
  * GameLayout
  * Layout global que engloba todas las escenas del juego.
- * Siempre muestra:
- *   - Zona de contenido (escena actual via children / router)
- *   - Cuadro de mensaje con message.png como fondo
- *   - 4 botones de acción con boton.png como fondo
  *
- * Uso en _layout.tsx:
- *   <GameLayout message={...} buttons={[...]}>
- *     <Stack />
- *   </GameLayout>
  */
 
 import React from "react";

@@ -18,7 +18,12 @@ export default function RootLayout() {
     GameFont: require("../assets/pokemon.ttf"),
   });
 
-  // ── Carga del motor Prolog ──────────────────────────────────────
+  useEffect(() => {
+    if (fontsLoaded || fontError) {
+      SplashScreen.hideAsync();
+    }
+  }, [fontsLoaded, fontError]);
+
   useEffect(() => {
     (async () => {
       try {
@@ -33,38 +38,57 @@ export default function RootLayout() {
         setPrologError(e.message);
       }
     })();
-  }, []);
+  }, [fontsLoaded, fontError]);
 
-  // ── Ocultar splash cuando ambos estén listos ───────────────────
-  useEffect(() => {
-    if ((fontsLoaded || fontError) && (prologReady || prologError)) {
-      SplashScreen.hideAsync();
-    }
-  }, [fontsLoaded, fontError, prologReady, prologError]);
+  if (!fontsLoaded && !fontError) return null;
 
-  // ── Estados de carga ───────────────────────────────────────────
-  if (!fontsLoaded && !fontError) return null; // splash visible
+  return (
+    <View style={styles.root}>
+      <Slot />
 
-  if (prologError)
-    return (
-      <View style={styles.center}>
-        <Text style={styles.error}>Error Prolog: {prologError}</Text>
-      </View>
-    );
+      {!prologReady && !prologError && (
+        <View style={styles.overlay}>
+          <ActivityIndicator size="large" color="#fff" />
+          <Text style={styles.loadingText}>Iniciando motor Prolog...</Text>
+        </View>
+      )}
 
-  if (!prologReady)
-    return (
-      <View style={styles.center}>
-        <ActivityIndicator size="large" />
-        <Text style={styles.loadingText}>Iniciando motor Prolog...</Text>
-      </View>
-    );
-
-  return <Slot />;
+      {prologError && (
+        <View style={[styles.overlay, styles.overlayError]}>
+          <Text style={styles.errorText}>
+            Error Prolog:{"\n"}
+            {prologError}
+          </Text>
+        </View>
+      )}
+    </View>
+  );
 }
 
 const styles = StyleSheet.create({
-  center: { flex: 1, justifyContent: "center", alignItems: "center", gap: 12 },
-  error: { color: "red", padding: 20, fontFamily: "GameFont" },
-  loadingText: { fontFamily: "GameFont" },
+  root: {
+    flex: 1,
+  },
+  overlay: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: "rgba(0,0,0,0.72)",
+    justifyContent: "center",
+    alignItems: "center",
+    gap: 14,
+  },
+  overlayError: {
+    backgroundColor: "rgba(80,0,0,0.88)",
+  },
+  loadingText: {
+    fontFamily: "GameFont",
+    color: "#fff",
+    fontSize: 14,
+  },
+  errorText: {
+    fontFamily: "GameFont",
+    color: "#ff6b6b",
+    fontSize: 13,
+    textAlign: "center",
+    padding: 24,
+  },
 });
