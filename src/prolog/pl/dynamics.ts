@@ -10,7 +10,7 @@ export const dynamics = `
     %:- dynamic activePokemon/1.
     %:- dynamic playerEggs/3.
 
-    init_game :-
+    init_game:-
         retractall(location(_,_)), asserta(location(littleroot, square)),
         retractall(backpack(_,_,_)), asserta(backpack(0, [], [])),
         retractall(activePokemon(_)), asserta(activePokemon(none)),

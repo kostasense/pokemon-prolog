@@ -4,12 +4,12 @@ export const engine = `
     pairs_values([], []).
 
     pairs_values([K-V | T], [V | R]):-
-    pairs_values(T, R).
+        pairs_values(T, R).
 
     % take first N elements of a list
     take(0, _, []).
     take(_, [], []).
-    take(N, [H | T], [H | R]) :-
+    take(N, [H | T], [H | R]):-
         N > 0,
         N1 is N - 1,
         take(N1, T, R).
@@ -227,11 +227,11 @@ export const engine = `
         scaledHP(BaseHP, Level, HP),
         pokemonMoves(Pokemon, Level, Moves),
 
-        allEvolutions(Pokemon, AllEvolutions)
+        allEvolutions(Pokemon, AllEvolutions),
         pokemonEvolutions(Pokemon, Level, AllEvolutions, Evolutions),
 
-        retractall(owned(_, _, _, _, _, _, _, _, _))),
-        asserta(owned(Tag, Pokemon, healthy, Level, Atk, HP, HP, 0, Moves)).
+        retractall(owned(_, _, _, _, _, _, _, _, _)),
+        asserta(owned(Tag, Pokemon, healthy, Level, Atk, HP, HP, 0, Moves)),
 
         retractall(ownedEvolutions(_, _)),
         asserta(ownedEvolutions(Tag, Evolutions)).
@@ -244,7 +244,7 @@ export const engine = `
         asserta(owned(Tag, Pokemon, healthy, Level, Atk, MaxHP, MaxHP, Exp, Moves)).
 
     % check if any pokemon wants to evolve 
-    checkEvolution([T | E], [Tag | R]):-
+    % checkEvolution([T | E], [Tag | R]):-
         
 
     % ==== RANDOM ENCOUNTER ====
