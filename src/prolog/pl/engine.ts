@@ -325,10 +325,12 @@ export const engine = `
         asserta(trainer(Route, Trainer, Money, Pokemon, Defeated)),
 
         % set pokemon stats
-        baseStats(Pokemon, BaseAtk, BaseHP),
+        baseForm(Pokemon, Base),
+        baseStats(Base, BaseAtk, BaseHP),
         scaledAttack(BaseAtk, Level, Atk),
         scaledHP(BaseHP, Level, HP),
         learnMoves(Pokemon, Level, Moves),
+        
         retractall(enemy(_, _, _, _, _, _)),
         asserta(enemy(Pokemon, Level, Atk, HP, HP, Moves)).
 
