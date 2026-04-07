@@ -3,7 +3,7 @@ export const engine = `
     % get a list of pairs and return only values
     pairs_values([], []).
 
-    pairs_values([K-V | T], [V | R]):-
+    pairs_values([_-V | T], [V | R]):-
         pairs_values(T, R).
 
     % take first N elements of a list
@@ -58,7 +58,7 @@ export const engine = `
     currentEvolution(Pokemon, Level, Result) :-
         evolves(Pokemon, Evolution, Required),
         Level >= Required,
-        currentEvo(Evolution, Level, Result).
+        currentEvolution(Evolution, Level, Result).
 
     currentEvolution(Pokemon, _, Pokemon).
 
@@ -78,8 +78,8 @@ export const engine = `
         allMoves(Type, AllMoves),
         findall(MoveLevel-Move, (learnsAt(Type, Move, MoveLevel), MoveLevel =< Level), A),
         sort(A, S),
-        reverse(S, NewS),
-        take(4, S, T),
+        reverse(S, Reversed),
+        take(4, Reversed, T),
         pairs_values(T, M),
         learnMoves(M, AllMoves, Moves).
 
@@ -107,9 +107,9 @@ export const engine = `
     pokemonEvolutions(Pokemon, Level, [E-locked | T], [E-evolved | R]):-
         evolves(Pokemon, E, L),
         L =< Level,
-        pokemonEvolutions(Pokemon, Level, T, R).
+        pokemonEvolutions(E, Level, T, R).
 
-    pokemonEvolutions(Pokemon, Level, [E-S | T], [E-S | R]):- pokemonEvolutions(Pokemon, Level, T, R).
+    pokemonEvolutions(_, Level, [E-S | T], [E-S | R]):- pokemonEvolutions(E, Level, T, R).
 
     % get scaled stats
     scaledAttack(BaseAtk, Level, Attack) :- Attack is BaseAtk + (Level * 2).
@@ -195,8 +195,8 @@ export const engine = `
 
         % get pokemon evolutions
         baseForm(Pokemon, Base),
-        allEvolutions(Pokemon, AllEvolutions),
-        pokemonEvolutions(Pokemon, Level, AllEvolutions, Evolutions),
+        allEvolutions(Base, AllEvolutions),
+        pokemonEvolutions(Base, Level, AllEvolutions, Evolutions),
 
         % catch pokemon
         retract(enemy(_, _, _, _, _, _)),
@@ -261,7 +261,7 @@ export const engine = `
         Type == 1,
 
         % check if trainer in route has been defeated
-        traveling(Route, _),
+        inRoute(Route, _),
         trainer(Route, _, _, _, no),
 
         enterBattle(Event).
@@ -287,14 +287,14 @@ export const engine = `
         Type == 1,
 
         % if trainer has been defeated send type 0
-        traveling(Route, _),
+        inRoute(Route, _),
         trainer(Route, _, _, _, yes),
 
         enterBattle(0).
 
     enterBattle(Type):-
-        traveling(Route, _),
-        battling(yes),
+        inRoute(Route, _),
+        inBattle(yes),
         encounter(Route, Type).
 
     % generate random encounter of type T
@@ -441,7 +441,7 @@ export const engine = `
         PlayerLost is (100 - (PlayerCurrent / PlayerMax * 100)),
 
         PlayerLost > EnemyLost,
-        rectract(winner(_, _)),
+        retract(winner(_, _)),
         asserta(winner(enemy, Type)).
 
     updateStats:-
@@ -460,9 +460,9 @@ export const engine = `
         winner(player, 1),
 
         updateStats,
-        retract(enemy(_, _, _, _, _, _)),
+        % retract(enemy(_, _, _, _, _, _)),
 
-        traveling(_, CityA),
+        inRoute(_, CityA),
         travel(CityA, square),
 
         trainer(Route, Trainer, Money, Pokemon, _),
@@ -477,8 +477,8 @@ export const engine = `
         asserta(backpack(NewMoney, Pokeballs, Team)),
         
         % change state from fighting to idle
-        retract(battling(_)),
-        asserta(battling(no)),
+        retract(inBattle(_)),
+        asserta(inBattle(no)),
         
         retract(idle(_)),
         assert(idle(city)).
@@ -488,14 +488,21 @@ export const engine = `
         winner(enemy, 1),
         
         updateStats,
-        retract(enemy(_, _, _, _, _, _)),
+        % retract(enemy(_, _, _, _, _, _)),
 
         backpack(CurrentMoney, Pokeballs, Team),
 
         NewMoney is CurrentMoney - (CurrentMoney / 10),
 
         retract(backpack(_, _, _)),
-        asserta(backpack(NewMoney, Pokeballs, Team)).
+        asserta(backpack(NewMoney, Pokeballs, Team)),
+        
+        % change state from fighting to idle
+        retract(inBattle(_)),
+        asserta(inBattle(no)),
+        
+        retract(idle(_)),
+        assert(idle(city)).
 
     finishBattle:-
         winner(_, _),
