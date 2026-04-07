@@ -70,5 +70,9 @@ export const map = `
     % prove cityA is connected to cityB (unidirectional)
     connected(A, B):- route(_, A, B, _, _).
     connected(A, B):- route(_, B, A, _, _).
+
+    % get route from cityA and cityB
+    getRoute(A, B, Route):- route(Route, A, B, _, _).
+    getRoute(A, B, Route):- route(Route, B, A, _, _).
     
 `;

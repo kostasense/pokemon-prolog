@@ -131,18 +131,26 @@ export const engine = `
     % ==== PLAYER ====
     % backpack(money, [pokeballs], [team])
     % owned(tag, pokemon, state, level, atk, current-hp, max-hp, exp, moves)
+    % inBattle(yes | no).
+    % inRoute(route, city).
+    % idle(none).
 
-    % player state
-    % traveling(none, none).
-    % battling(none).
-    % idle (none).
+    % select a city in map to travel
+    selectCity(CityB):-
+        location(CityA, _),
+
+        connected(CityA, CityB), % allow travel if they are connected, you can comment this if you're gonna check it separately
+        getRoute(CityA, CityB, Route),
+
+        retract(inRoute(_, _)),
+        assert(inRoute(Route, CityB)).
 
     % choose active pokemon for fights
     choosePokemon(Tag):-
         retract(activePokemon(_)),
         asserta(activePokemon(Tag)).
 
-    % move to another city
+    % change player's location
     travel(City, Location) :-
         retractall(location(_, _)),
         asserta(location(City, Location)).
@@ -243,65 +251,54 @@ export const engine = `
         retract(owned(Tag, _, _, _, _, _, _, _, _)),
         asserta(owned(Tag, Pokemon, healthy, Level, Atk, MaxHP, MaxHP, Exp, Moves)).
 
+    % level up pokemon
+    levelUp():-
+        activePokemon(Tag),
+        owned(Tag, Pokemon, State, Level, Atk, CurrentHP, MaxHP, Exp, Moves),
+
+        nextLevel(Level, RequiredExp),
+        Exp >= RequiredExp,
+
+        % new stats
+        NewLevel is Level + 1,
+        NewAtk is Atk + 2,
+        NewHP is MaxHP + 3,
+
+        retract(owned(Tag, _, _, _, _, _, _, _, _)),
+        asserta(owned(Tag, Pokemon, State, NewLevel, NewAtk, CurrentHP, NewHP, 0, Moves)). 
+
     % check if any pokemon wants to evolve 
     % checkEvolution([T | E], [Tag | R]):-
-        
 
     % ==== RANDOM ENCOUNTER ====
     % enemy(pokemon, level, atk, current-hp, max-hp, moves)
 
-    % will random event pop up?
-    event:-
-        % event pop up
-        random_between(0, 1, Event),
-        Event == 1,
-
-        % type of battle (wild pokemon or trainer)
-        random_between(0, 1, Type),
-        Type == 1,
-
-        % check if trainer in route has been defeated
-        inRoute(Route, _),
-        trainer(Route, _, _, _, no),
-
-        enterBattle(Event).
-
-    event:-
-        % event pop up
-        random_between(0, 1, Event),
-        Event == 1,
-
-        % type of battle (wild pokemon or trainer)
-        random_between(0, 1, Type),
-        Type == 0,
-
-        enterBattle(Type).
-
-    event:-
-        % event pop up
-        random_between(0, 1, Event),
-        Event == 1,
-
-        % type of battle (wild pokemon or trainer)
-        random_between(0, 1, Type),
-        Type == 1,
-
-        % if trainer has been defeated send type 0
-        inRoute(Route, _),
-        trainer(Route, _, _, _, yes),
-
-        enterBattle(0).
-
-    enterBattle(Type):-
-        inRoute(Route, _),
-        inBattle(yes),
-        encounter(Route, Type).
-
-    % generate random encounter of type T
+    % events
     % 0 -> wild pokemon
     % 1 -> trainer
-    encounter(Route, T):-
-        T == 0,
+    % 2 -> egg appears % TODO
+    % 3 -> pokeball appears % TODO
+    event(Type):- random_between(0, 3, Type).
+
+    enterBattle(Type):-
+        retract(inRoute(Route, _)),
+        assert(inBattle(yes)),
+        
+        % check if trainer in route has been defeated
+        trainer(Route, _, _, _, no),
+        encounter(Route, Type).
+
+    enterBattle(Type):-
+        retract(inRoute(Route, _)),
+        assert(inBattle(yes)),
+        
+        % if trainer in route has been defeated, send encounter with wild pokemon
+        trainer(Route, _, _, _, yes),
+        encounter(Route, 0).
+
+    % generate random encounter of given type
+    encounter(Route, Type):-
+        Type == 0,
         % get encounter difficulty
         route(Route, _, _, _, Difficulty),
         difficulty(Difficulty, L, U),
@@ -317,11 +314,16 @@ export const engine = `
         % change pokemon to its evolved form (if it applies)
         currentEvolution(Pokemon, Level, Result),
 
+        % set type of fight in winner predicate
+        retract(winner(_, _)),
+        asserta(winner(none, Type)),
+
+        % assert enemy
         retractall(enemy(_, _, _, _, _, _)),
         asserta(enemy(Result, Level, Atk, HP, HP, Moves)).
 
-    encounter(Route, T):-
-        T == 1,
+    encounter(Route, Type):-
+        Type == 1,
         route(Route, _, _, _, Difficulty),
         difficulty(Difficulty, L, U),
         random_between(L, U, Level),
@@ -337,13 +339,17 @@ export const engine = `
         scaledAttack(BaseAtk, Level, Atk),
         scaledHP(BaseHP, Level, HP),
         learnMoves(Pokemon, Level, Moves),
+
+        % set type of fight in winner predicate
+        retract(winner(_, _)),
+        asserta(winner(none, Type)),
         
+        % assert enemy
         retractall(enemy(_, _, _, _, _, _)),
         asserta(enemy(Pokemon, Level, Atk, HP, HP, Moves)).
 
     % ==== BATTLE LOGIC ====
-    % hit enemy
-    hitWith(none).
+    % hitWith(none).
 
     hitEnemy:-
         enemy(Pokemon, Level, EnemyAtk, CurrentHP, MaxHP, Moves),
@@ -380,12 +386,13 @@ export const engine = `
         retract(enemy(_, _, _, _, _, _)),
         asserta(enemy(Pokemon, Level, EnemyAtk, NewHP, MaxHP, Moves)).
 
-    hitPlayer(Move):-
+    hitPlayer:-
         activePokemon(Tag),
         owned(Tag, Pokemon, State, Level, Atk, CurrentHP, MaxHP, Exp, Moves),
 
         % get enemy stats
         enemy(_, _, EnemyAtk, _, _, _),
+        hitWith(Move),
 
         % calculate damage done
         weakTo(Pokemon, Move),
@@ -397,12 +404,13 @@ export const engine = `
         retract(owned(Tag, _, _, _, _, _, _, _, _)),
         asserta(owned(Tag, Pokemon, State, Level, Atk, NewHP, MaxHP, Exp, Moves)).
 
-    hitPlayer(Move):-
+    hitPlayer:-
         activePokemon(Tag),
         owned(Tag, Pokemon, State, Level, Atk, CurrentHP, MaxHP, Exp, Moves),
 
         % get enemy stats
         enemy(_, _, EnemyAtk, _, _, _),
+        hitWith(Move),
 
         % calculate damage done
         move(Move, _, MoveAtk, _),
@@ -416,7 +424,10 @@ export const engine = `
     enemyMove(Move):-
         enemy(_, _, _, _, _, Moves),
         getLearned(Moves, Learned),
-        random_member(Move, Learned).
+        random_member(Move, Learned),
+        
+        retract(hitWith(_)),
+        asserta(hitWith(Move)).
 
     % check if either pokemon has fainted
     fainted(enemy):- enemy(_, _, _, HP, _, _), HP == 0.
@@ -428,7 +439,7 @@ export const engine = `
 
     % winner(player | enemy, pokemon/0 | trainer/1)
     % winner(none, none).
-    checkWinner(Round, Type):-
+    checkWinner(Round):-
         Round == 4,
 
         % check hp lost for opponent
@@ -441,7 +452,7 @@ export const engine = `
         PlayerLost is (100 - (PlayerCurrent / PlayerMax * 100)),
 
         PlayerLost > EnemyLost,
-        retract(winner(_, _)),
+        retract(winner(_, Type)),
         asserta(winner(enemy, Type)).
 
     updateStats:-
@@ -479,7 +490,7 @@ export const engine = `
         % change state from fighting to idle
         retract(inBattle(_)),
         asserta(inBattle(no)),
-        
+
         retract(idle(_)),
         assert(idle(city)).
 
@@ -505,7 +516,30 @@ export const engine = `
         assert(idle(city)).
 
     finishBattle:-
-        winner(_, _),
+        % will not update state on this one
+        % update based on winner (tie or flee)
+        winner(none, _),
+
+        inRoute(_,CityA),
+        travel(CityA, square),
+
+        retract(inBattle(_)),
+        assert(inBattle(no)),
+
+        retract(idle(_)),
+        assert(idle(city)).
+
+    finishBattle:-
+        winner(_, pokemon),
         updateStats,
-        retract(enemy(_, _, _, _, _, _)).
+
+        inRoute(_,CityA),
+        travel(CityA, square),
+
+        retract(inBattle(_)),
+        assert(inBattle(no)),
+
+        retract(idle(_)),
+        assert(idle(city)).
+        % retract(enemy(_, _, _, _, _, _)).
 `;
