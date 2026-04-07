@@ -15,8 +15,16 @@ export class PrologService {
   }
 
   async getStarters(): Promise<string[]> {
-    const results = await query("starters(List), member(Name, List)");
-    return results.map((r: any) => (r.Name as string).toUpperCase());
+    const result = await query("starters(List)");
+    const list = result[0]?.List;
+    if (!Array.isArray(list)) return [];
+    return list.map((n: any) => String(n).toUpperCase());
+  }
+
+  async chooseStarter(starter: string): Promise<boolean> {
+    const cleanName = starter.toLowerCase().trim();
+    const results = await prove(`chooseStarter(${cleanName})`);
+    return results;
   }
 }
 

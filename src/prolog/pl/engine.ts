@@ -1,5 +1,11 @@
 export const engine = `
     % ==== HELPERS ====
+    % get a list of pairs and return only values
+    pairs_values([], []).
+
+    pairs_values([K-V | T], [V | R]):-
+    pairs_values(T, R).
+
     % take first N elements of a list
     take(0, _, []).
     take(_, [], []).
@@ -28,7 +34,7 @@ export const engine = `
         learnMoves(Learned, T, R).
 
     learnMoves(Learned, [M-locked | T], [M-forgotten | R]) :-
-        \+ member(M, Learned),
+        \\+ member(M, Learned),
         move(M, _, _, ML),
         findall(LL, (member(LM, Learned), move(LM, _, _, LL)), LLs),
         min_list(LLs, MinLL),
@@ -63,7 +69,8 @@ export const engine = `
         type(Pokemon, Type),
         availableMoves(Type, AllMoves),
         findall(MoveLevel-Move, (learnsAt(Type, Move, MoveLevel), MoveLevel =< Level), A),
-        sort(0, @>=, A, S),
+        sort(A, S),
+        reverse(S, NewS),
         take(4, S, T),
         pairs_values(T, M),
         learnMoves(M, AllMoves, Moves).
@@ -228,7 +235,7 @@ export const engine = `
     % hit enemy
     hitWith(none).
 
-    hitEnemy():-
+    hitEnemy:-
         enemy(Pokemon, Level, EnemyAtk, CurrentHP, MaxHP, Moves),
 
         % get active pokemon attack
@@ -246,7 +253,7 @@ export const engine = `
         retract(enemy(_, _, _, _, _, _)),
         asserta(enemy(Pokemon, Level, EnemyAtk, NewHP, MaxHP, Moves)).
 
-    hitEnemy():-
+    hitEnemy:-
         enemy(Pokemon, Level, EnemyAtk, CurrentHP, MaxHP, Moves),
 
         % get active pokemon attack
@@ -263,7 +270,7 @@ export const engine = `
         retract(enemy(_, _, _, _, _, _)),
         asserta(enemy(Pokemon, Level, EnemyAtk, NewHP, MaxHP, Moves)).
 
-    hitPlayer():-
+    hitPlayer:-
         activePokemon(Tag),
         owned(Tag, Pokemon, State, Level, Atk, CurrentHP, MaxHP, Exp, Moves),
 
@@ -314,7 +321,7 @@ export const engine = `
     % winner(player | enemy, pokemon | trainer)
     winner(none, none).
 
-    finishBattle():-
+    finishBattle:-
         activePokemon(Tag),
         owned(Tag, Pokemon, _, Level, Atk, CurrentHP, MaxHP, Exp, Moves),
         pokemonHealth(CurrentHP, MaxHP, NewState),
@@ -337,7 +344,7 @@ export const engine = `
         % change location to destined city
         travel(CityA, square).
 
-    finishBattle():-
+    finishBattle:-
         activePokemon(Tag),
         owned(Tag, Pokemon, _, Level, Atk, CurrentHP, MaxHP, Exp, Moves),
         pokemonHealth(CurrentHP, MaxHP, NewState),
@@ -348,5 +355,5 @@ export const engine = `
         % update based on winner
         winner(trainer, trainer).
 
-    finishBattle().
+    finishBattle.
 `;

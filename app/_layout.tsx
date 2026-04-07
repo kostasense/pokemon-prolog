@@ -27,6 +27,7 @@ export default function RootLayout() {
           map,
           trainers,
         ]);
+        await prologEngine.queryOne("init_game");
         setPrologReady(true);
       } catch (e: any) {
         setPrologError(e.message);

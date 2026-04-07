@@ -9,13 +9,32 @@ class PrologEngine {
   private pl: any;
 
   constructor() {
-    // require() dentro del constructor garantiza que patchProcess
-    // ya se ejecutó antes de que core.js intente leer process.browser,
-    // window, document, etc.
     this.pl = require("tau-prolog/modules/core.js");
-    require("tau-prolog/modules/lists.js")(this.pl);
+
+    const loadLists = require("tau-prolog/modules/lists.js");
+    const loadFormat = require("tau-prolog/modules/format.js");
+    const loadRandom = require("tau-prolog/modules/random.js");
+
+    loadLists(this.pl);
+    loadFormat(this.pl);
+    loadRandom(this.pl);
 
     this.session = this.pl.create(Infinity);
+
+    const setupQueries = `
+        :- use_module(library(lists)).
+        :- use_module(library(random)).
+        :- use_module(library(format)).
+    `;
+
+    this.session.consult(setupQueries, {
+      success: () => console.log("Módulos Prolog listos."),
+      error: (err: any) =>
+        console.error(
+          "Error al inicializar módulos:",
+          this.pl.format_answer(err),
+        ),
+    });
   }
 
   async loadProgram(prologCode: string): Promise<void> {

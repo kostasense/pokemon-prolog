@@ -65,7 +65,7 @@ export const map = `
     
     % possible locations in cityA
     city(A, [square, store, hospital, gymnasium]):- gymnasium(A, _, _, _, _).
-    city(A, [square, store, hospital]):- \+ gymnasium(A, _, _, _, _).
+    city(A, [square, store, hospital]):- \\+ gymnasium(A, _, _, _, _).
     
     % prove cityA is connected to cityB (unidirectional)
     connected(A, B):- route(_, A, B, _, _).
