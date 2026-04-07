@@ -29,6 +29,7 @@ export const pokemon = `
     type(poliwhirl,     water).
     type(poliwrath,     water).
     type(psyduck,       water).
+    type(golduck,       water).
     type(vaporeon,      water).
 
     % ===== GRASS =====

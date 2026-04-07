@@ -13,6 +13,11 @@ export class PrologService {
       .slice(0, limit)
       .map((r: any) => (r.Name as string).toUpperCase());
   }
+
+  async getStarters(): Promise<string[]> {
+    const results = await query("starters(List), member(Name, List)");
+    return results.map((r: any) => (r.Name as string).toUpperCase());
+  }
 }
 
 export const prologService = new PrologService();

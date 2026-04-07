@@ -13,13 +13,9 @@ const HEAD_H = 34;
 const HEAD_SCALE_MAX = 1.25;
 
 export default function MapScreen() {
-  const [playerLocationId, setPlayerLocationId] =
-    useState<string>("littleroot");
+  const [playerLocationId, setPlayerLocationId] = useState("littleroot");
   const [message, setMessage] = useState("Elige una opción:");
-  const [buttons, setButtons] =
-    useState<[ActionButton, ActionButton, ActionButton, ActionButton]>(
-      getMainButtons(),
-    );
+  const [buttons, setButtons] = useState(getMainButtons());
 
   const pulse = useRef(new Animated.Value(1)).current;
 
