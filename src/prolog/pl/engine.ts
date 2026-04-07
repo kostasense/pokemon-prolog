@@ -281,16 +281,20 @@ export const engine = `
     event(Type):- random_between(0, 3, Type).
 
     enterBattle(Type):-
-        retract(inRoute(Route, _)),
-        assert(inBattle(yes)),
+        inRoute(Route, _),
+
+        retract(inBattle(_)),
+        asserta(inBattle(yes)),
         
         % check if trainer in route has been defeated
         trainer(Route, _, _, _, no),
         encounter(Route, Type).
 
     enterBattle(Type):-
-        retract(inRoute(Route, _)),
-        assert(inBattle(yes)),
+        inRoute(Route, _),
+
+        retract(inBattle(_)),
+        asserta(inBattle(yes)),
         
         % if trainer in route has been defeated, send encounter with wild pokemon
         trainer(Route, _, _, _, yes),
