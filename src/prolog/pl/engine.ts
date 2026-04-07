@@ -373,14 +373,12 @@ export const engine = `
         retract(enemy(_, _, _, _, _, _)),
         asserta(enemy(Pokemon, Level, EnemyAtk, NewHP, MaxHP, Moves)).
 
-    hitPlayer:-
+    hitPlayer(Move):-
         activePokemon(Tag),
         owned(Tag, Pokemon, State, Level, Atk, CurrentHP, MaxHP, Exp, Moves),
 
-        % get enemy stats and move
-        enemy(_, _, EnemyAtk, _, _, Moves),
-        getLearned(Moves, Learned),
-        random_member(Move, Learned),
+        % get enemy stats
+        enemy(_, _, EnemyAtk, _, _, _),
 
         % calculate damage done
         weakTo(Pokemon, Move),
@@ -396,7 +394,7 @@ export const engine = `
         activePokemon(Tag),
         owned(Tag, Pokemon, State, Level, Atk, CurrentHP, MaxHP, Exp, Moves),
 
-        % get enemy stats and move
+        % get enemy stats
         enemy(_, _, EnemyAtk, _, _, _),
 
         % calculate damage done
