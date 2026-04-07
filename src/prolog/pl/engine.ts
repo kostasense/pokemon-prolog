@@ -92,6 +92,11 @@ export const engine = `
     battling(none, none).
     idling(map).
 
+    % choose active pokemon for fights
+    choosePokemon(Tag):-
+        retract(activePokemon(_)),
+        asserta(activePokemon(Tag)).
+
     % move to another city
     travel(City, Location) :-
         retractall(location(_, _)),
