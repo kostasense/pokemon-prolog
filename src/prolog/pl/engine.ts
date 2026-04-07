@@ -459,6 +459,50 @@ export const engine = `
         retract(winner(_, Type)),
         asserta(winner(enemy, Type)).
 
+    checkWinner(Round):-
+        Round == 4,
+
+        % check hp lost for opponent
+        enemy(_, _, _, EnemyCurrent, EnemyMax, _),
+        EnemyLost is (100 - (EnemyCurrent / EnemyMax * 100)),
+
+        % check hp lost for player
+        activePokemon(Tag),
+        owned(Tag, _, _, _, _, PlayerCurrent, PlayerMax, _, _),
+        PlayerLost is (100 - (PlayerCurrent / PlayerMax * 100)),
+
+        PlayerLost < EnemyLost,
+        retract(winner(_, Type)),
+        asserta(winner(player, Type)).
+
+    checkWinner(Round):-
+        Round == 4,
+
+        % check hp lost for opponent
+        enemy(_, _, _, EnemyCurrent, EnemyMax, _),
+        EnemyLost is (100 - (EnemyCurrent / EnemyMax * 100)),
+
+        % check hp lost for player
+        activePokemon(Tag),
+        owned(Tag, _, _, _, _, PlayerCurrent, PlayerMax, _, _),
+        PlayerLost is (100 - (PlayerCurrent / PlayerMax * 100)),
+
+        PlayerLost == EnemyLost,
+        retract(winner(_, Type)),
+        asserta(winner(none, Type)).
+
+    checkWinner(_):-
+        fainted(player),
+
+        retract(winner(_, Type)),
+        asserta(winner(enemy, Type)).
+
+    checkWinner(_):-
+        fainted(enemy),
+
+        retract(winner(_, Type)),
+        asserta(winner(player, Type)).
+
     updateStats:-
         activePokemon(Tag),
         owned(Tag, Pokemon, _, Level, Atk, CurrentHP, MaxHP, Exp, Moves),
