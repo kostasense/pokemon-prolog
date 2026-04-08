@@ -137,43 +137,43 @@ export const pokemon = `
 
     % move(move, type, attack power, level)
     % ===== NORMAL =====
-    move('Tackle',          normal, 1,  1).
-    move('Quick Attack',    normal, 1,  4).
-    move('Facade',          normal, 1,  8).
-    move('Swift',           normal, 2,  12).
-    move('Headbutt',        normal, 2,  16).
-    move('Slash',           normal, 2,  20).
-    move('Body Slam',       normal, 1,  24).
-    move('Hyper Voice',     normal, 3,  28).
-    move('Take Down',       normal, 3,  30).
+    move('Placaje',          normal, 1,  1).
+    move('Ataque Rápido',    normal, 1,  4).
+    move('Imagen',           normal, 1,  8).
+    move('Rapidez',          normal, 2,  12).
+    move('Golpe Cabeza',     normal, 2,  16).
+    move('Cuchillada',       normal, 2,  20).
+    move('Golpe Cuerpo',     normal, 1,  24).
+    move('Vozarrón',         normal, 3,  28).
+    move('Derribo',          normal, 3,  30).
 
     % ===== FIRE =====
-    move('Ember',           fire,   1,  6).
-    move('Fire Fang',       fire,   2,  12).
-    move('Flame Wheel',     fire,   2,  18).
-    move('Fire Spin',       fire,   1,  24).
-    move('Flare Blitz',     fire,   3,  30).
+    move('Ascuas',           fire,   1,  6).
+    move('Colmillo Ígneo',   fire,   2,  12).
+    move('Rueda Fuego',      fire,   2,  18).
+    move('Giro Fuego',       fire,   1,  24).
+    move('Envite Ígneo',     fire,   3,  30).
 
     % ===== WATER =====
-    move('Water Gun',       water,  1,  6).
-    move('Bubble',          water,  2,  12).
-    move('Bubble Beam',     water,  1,  18).
-    move('Aqua Jet',        water,  1,  24).
-    move('Liquidation',     water,  2,  30).
+    move('Pistola de Agua',     water,  1,  6).
+    move('Burbuja',          water,  2,  12).
+    move('Rayo Burbuja',     water,  1,  18).
+    move('Acua Jet',         water,  1,  24).
+    move('Hidroariete',      water,  2,  30).
 
     % ===== GRASS =====
-    move('Vine Whip',       grass,  1,  6).
-    move('Razor Leaf',      grass,  1,  12).
-    move('Magical Leaf',    grass,  2,  18).
-    move('Giga Drain',      grass,  2,  24).
-    move('Solar Beam',      grass,  3,  30).
+    move('Látigo Cepa',       grass,  1,  6).
+    move('Hoja Afilada',      grass,  1,  12).
+    move('Hoja Mágica',       grass,  2,  18).
+    move('Gigadrenado',       grass,  2,  24).
+    move('Rayo Solar',        grass,  3,  30).
 
     % ===== GHOST =====
-    move('Lick',            ghost,  30, 6).
-    move('Shadow Sneak',    ghost,  40, 12).
-    move('Shadow Claw',     ghost,  70, 18).
-    move('Shadow Ball',     ghost,  80, 24).
-    move('Phantom Force',   ghost,  80, 30).
+    move('Lengüetazo',        ghost,  30, 6).
+    move('Sombra Vil',        ghost,  40, 12).
+    move('Garra Umbría',      ghost,  70, 18).
+    move('Bola Sombra',       ghost,  80, 24).
+    move('Golpe Fantasma',    ghost,  80, 30).
 
     weakTo(X, Y):- type(X, water), move(Y, grass, _, _).
     weakTo(X, Y):- type(X, ghost), move(Y, ghost, _, _).
