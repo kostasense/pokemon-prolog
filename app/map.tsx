@@ -1,9 +1,11 @@
+/* eslint-disable react-hooks/exhaustive-deps */
 import React, { useEffect, useRef, useState } from "react";
 import { Animated, Image, ScrollView, StyleSheet, View } from "react-native";
 
 import GameLayout, { ActionButton } from "../components/GameLayout";
 import { getLocationById } from "../constants/mapLocations";
 import { scaleImage } from "../utils/helpers";
+import { Location } from "../utils/interfaces";
 import { prologService } from "../utils/PrologService";
 
 const MAP_W = 600;
@@ -13,7 +15,10 @@ const HEAD_H = 34;
 const HEAD_SCALE_MAX = 1.25;
 
 export default function MapScreen() {
-  const [playerLocationId, setPlayerLocationId] = useState("littleroot");
+  const [playerLocation, setPlayerLocation] = useState<Location>({
+    main: "littleroot",
+    place: "plaza",
+  });
   const [message, setMessage] = useState("Elige una opción:");
   const [buttons, setButtons] = useState(getMainButtons());
 
@@ -38,65 +43,151 @@ export default function MapScreen() {
     return () => anim.stop();
   });
 
-  const location = getLocationById(playerLocationId);
-  const headLeft = location ? (location.x / 100) * MAP_W - HEAD_W / 2 : 0;
-  const headTop = location ? (location.y / 100) * MAP_H - HEAD_H / 2 : 0;
+  useEffect(() => {
+    async function loadData() {
+      const location = await prologService.getCurrentLocation();
+      setPlayerLocation(location);
+    }
+    loadData();
+  }, []);
+
+  const currentLocationData = playerLocation
+    ? getLocationById(playerLocation.main)
+    : null;
+
+  const headLeft = currentLocationData
+    ? (currentLocationData.x / 100) * MAP_W - HEAD_W / 2
+    : 0;
+  const headTop = currentLocationData
+    ? (currentLocationData.y / 100) * MAP_H - HEAD_H / 2
+    : 0;
+
+  const getLocationMessage = (loc: Location) => {
+    const data = loc ? getLocationById(loc.main) : null;
+    if (!data) return "Elige una opción:";
+
+    const isRuta = data.label.startsWith("Ruta");
+    const placePart = isRuta ? "" : ` - ${loc?.place.toUpperCase()}`;
+    return `Ubicación actual → ${data.label}${placePart}\n\nElige una opción:`;
+  };
 
   useEffect(() => {
-    setMessage(
-      "Ubicación actual -> " + location?.label + "\n\nElige una opción:",
-    );
-  }, [location]);
+    if (playerLocation.place !== "") {
+      setMessage(getLocationMessage(playerLocation));
+      setButtons(getMainButtons());
+    } else {
+      setMessage(getLocationMessage(playerLocation));
+      setButtons(getRouteButtons());
+    }
+  }, [playerLocation]);
 
   function goMain() {
-    setMessage(
-      "Ubicación actual -> " + location?.label + "\n\nElige una opción:",
-    );
+    setMessage(getLocationMessage(playerLocation));
     setButtons(getMainButtons());
   }
 
-  function getMainButtons(): [
-    ActionButton,
-    ActionButton,
-    ActionButton,
-    ActionButton,
-  ] {
+  function getMainButtons(): ActionButton[] {
     return [
       { label: "Mover", onPress: () => handleMover() },
       { label: "Pokémon", onPress: () => handlePokemon() },
-      { label: "Mochila", onPress: () => console.log("[map] TODO: Mochila") },
-      { label: "Menú", onPress: () => console.log("[map] TODO: Menú") },
+      { label: "Mochila", onPress: () => handleMochila() },
+      { label: "Menú", onPress: () => handleMenu() },
     ];
   }
 
-  function handleMover() {
+  function getRouteButtons(): ActionButton[] {
+    return [
+      { label: "", onPress: () => console.log() },
+      { label: "Siguiente →", onPress: () => handleEvent() },
+      { label: "", onPress: () => console.log() },
+      { label: "", onPress: () => console.log() },
+    ];
+  }
+
+  async function handleMover(startIndex = 0) {
+    const locations = await prologService.getMoveLocations();
+
+    if (!locations || locations.length === 0) {
+      setMessage("No hay lugares a donde ir.");
+      return;
+    }
+
     setMessage("¿A dónde quieres ir?");
-    setButtons([
-      { label: "Ruta 1", onPress: () => console.log("[map] TODO: ir Ruta 1") },
-      { label: "Ciudad", onPress: () => console.log("[map] TODO: ir Ciudad") },
-      { label: "Cueva", onPress: () => console.log("[map] TODO: ir Cueva") },
-      { label: "← Atrás", onPress: () => goMain() },
-    ]);
+
+    const actualIndex = startIndex % locations.length;
+    const nextIndex = (actualIndex + 2) % locations.length;
+
+    const loc1 = locations[actualIndex];
+    const loc2 = locations[actualIndex + 1];
+
+    const newButtons: ActionButton[] = [
+      {
+        label: getLocationById(loc1)?.label || "",
+        onPress: async () => {
+          const locationSelected = await prologService.moveToLocation(loc1);
+          if (locationSelected) {
+            const route = await prologService.getInRouteLocation();
+            setPlayerLocation(route);
+          } else {
+            setMessage("Error al elegir ubicación. Intenta de nuevo.");
+            setButtons([
+              { label: "", onPress: () => console.log() },
+              { label: "Siguiente →", onPress: () => handleMover() },
+              { label: "", onPress: () => console.log() },
+              { label: "", onPress: () => console.log() },
+            ]);
+          }
+        },
+      },
+      {
+        label: getLocationById(loc2)?.label || "",
+        onPress: async () => {
+          const locationSelected = await prologService.moveToLocation(loc2);
+          if (locationSelected) {
+            const route = await prologService.getInRouteLocation();
+            setPlayerLocation(route);
+          } else {
+            setMessage("Error al elegir ubicación. Intenta de nuevo.");
+            setButtons([
+              { label: "", onPress: () => console.log() },
+              { label: "Siguiente →", onPress: () => handleMover() },
+              { label: "", onPress: () => console.log() },
+              { label: "", onPress: () => console.log() },
+            ]);
+          }
+        },
+      },
+      {
+        label: "← Volver",
+        onPress: () => goMain(),
+      },
+      {
+        label: locations.length > 2 ? "Ver más →" : "",
+        onPress: () => {
+          if (locations.length > 2) {
+            handleMover(nextIndex);
+          }
+        },
+      },
+    ];
+
+    setButtons(newButtons);
   }
 
   async function handlePokemon() {
-    const names = await prologService.getWildPokemonNames(3);
-    setMessage("¿Qué Pokémon te interesa?");
-    setButtons([
-      {
-        label: names[0] ?? "???",
-        onPress: () => console.log("[map] Seleccionó:", names[0]),
-      },
-      {
-        label: names[1] ?? "???",
-        onPress: () => console.log("[map] Seleccionó:", names[1]),
-      },
-      {
-        label: names[2] ?? "???",
-        onPress: () => console.log("[map] Seleccionó:", names[2]),
-      },
-      { label: "← Atrás", onPress: () => goMain() },
-    ]);
+    prologService.getOwnedPokemons();
+  }
+
+  async function handleMochila() {
+    prologService.getBackpackContent();
+  }
+
+  async function handleMenu() {
+    console.log("handle menu");
+  }
+
+  async function handleEvent() {
+    console.log("handle event");
   }
 
   return (

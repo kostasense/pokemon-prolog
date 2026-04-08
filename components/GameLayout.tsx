@@ -6,12 +6,12 @@
 
 import React from "react";
 import {
-    Dimensions,
-    ImageBackground,
-    StyleSheet,
-    Text,
-    TouchableOpacity,
-    View,
+  Dimensions,
+  ImageBackground,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
 } from "react-native";
 
 const { width: SCREEN_W } = Dimensions.get("window");
@@ -24,7 +24,7 @@ export type ActionButton = {
 
 type GameLayoutProps = {
   message: string;
-  buttons: [ActionButton, ActionButton, ActionButton, ActionButton];
+  buttons: ActionButton[];
   children: React.ReactNode;
 };
 

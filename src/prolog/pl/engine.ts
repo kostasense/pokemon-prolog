@@ -143,7 +143,7 @@ export const engine = `
         getRoute(CityA, CityB, Route),
 
         retract(inRoute(_, _)),
-        assert(inRoute(Route, CityB)).
+        asserta(inRoute(Route, CityB)).
 
     % choose active pokemon for fights
     choosePokemon(Tag):-
@@ -252,7 +252,7 @@ export const engine = `
         asserta(owned(Tag, Pokemon, healthy, Level, Atk, MaxHP, MaxHP, Exp, Moves)).
 
     % level up pokemon
-    levelUp():-
+    levelUp:-
         activePokemon(Tag),
         owned(Tag, Pokemon, State, Level, Atk, CurrentHP, MaxHP, Exp, Moves),
 

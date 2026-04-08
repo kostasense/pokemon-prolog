@@ -90,7 +90,7 @@ export default function IntroScreen() {
   ] {
     return [
       { label: "", onPress: () => console.log() },
-      { label: "Siguiente", onPress: () => handleNext(1) },
+      { label: "Siguiente →", onPress: () => handleNext(1) },
       { label: "", onPress: () => console.log() },
       { label: "", onPress: () => console.log() },
     ];
@@ -104,7 +104,7 @@ export default function IntroScreen() {
           setMessage("Empezaremos seleccionando tu Pokémon inicial.");
           setButtons([
             { label: "", onPress: () => console.log() },
-            { label: "Siguiente", onPress: () => handleNext(2) },
+            { label: "Siguiente →", onPress: () => handleNext(2) },
             { label: "", onPress: () => console.log() },
             { label: "", onPress: () => console.log() },
           ]);
@@ -158,7 +158,7 @@ export default function IntroScreen() {
                   setMessage("Error al elegir el inicial. Intenta de nuevo.");
                   setButtons([
                     { label: "", onPress: () => console.log() },
-                    { label: "Siguiente", onPress: () => handleNext(2) },
+                    { label: "Siguiente →", onPress: () => handleNext(2) },
                     { label: "", onPress: () => console.log() },
                     { label: "", onPress: () => console.log() },
                   ]);
@@ -183,7 +183,7 @@ export default function IntroScreen() {
           setMessage("Buena suerte.");
           setButtons([
             { label: "", onPress: () => console.log() },
-            { label: "Siguiente", onPress: () => router.push("/map" as any) },
+            { label: "Siguiente →", onPress: () => router.push("/map" as any) },
             { label: "", onPress: () => console.log() },
             { label: "", onPress: () => console.log() },
           ]);

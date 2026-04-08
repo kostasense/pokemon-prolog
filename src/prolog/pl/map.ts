@@ -74,5 +74,10 @@ export const map = `
     % get route from cityA and cityB
     getRoute(A, B, Route):- route(Route, A, B, _, _).
     getRoute(A, B, Route):- route(Route, B, A, _, _).
+
+    % get connected cities to current city
+    connectedCities(Cities) :-
+        location(City, _),
+        findall(B, (map(B, _), connected(City, B)), Cities).
     
 `;

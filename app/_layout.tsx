@@ -17,6 +17,12 @@ export default function RootLayout() {
     GameFont: require("../assets/pokemon.ttf"),
   });
 
+  //const full = [dynamics, pokemon, engine, map, trainers].join("\n");
+  //const lines = full.split("\n");
+  //console.log("Línea 254:", lines[254]);
+  //console.log("Línea 255:", lines[255]);
+  //console.log("Línea 256:", lines[256]);
+
   useEffect(() => {
     (async () => {
       try {
