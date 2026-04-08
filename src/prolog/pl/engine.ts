@@ -295,7 +295,7 @@ export const engine = `
 
     updateEvolutions(_, _, [], []).
     updateEvolutions(E, NewState, [E-_ | T], [E-NewState | R]):- updateEvolutions(E, NewState, T, R).
-    updateEvolutions(Evolution, NewState, [E-S | T], [E-S | R]):- E \= Evolution, updateEvolutions(Evolution, NewState, T, R).
+    updateEvolutions(Evolution, NewState, [E-S | T], [E-S | R]):- E \\= Evolution, updateEvolutions(Evolution, NewState, T, R).
 
     % ==== RANDOM ENCOUNTER ====
     % enemy(pokemon, level, atk, current-hp, max-hp, moves)
