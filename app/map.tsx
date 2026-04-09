@@ -179,7 +179,50 @@ export default function MapScreen() {
   }
 
   async function handleMochila() {
-    prologService.getBackpackContent();
+    const backpack = await prologService.getBackpackContent();
+
+    setMessage("Contenido de la mochila\n\nDinero: $ " + backpack.money);
+
+    const newButtons: ActionButton[] = [
+      {
+        label: "Pokebolas",
+        onPress: async () => {
+          setMessage("Pokebolas guardadas:");
+          setButtons([
+            {
+              iconLabel: (
+                <Image
+                  source={require("../assets/pokeball.png")}
+                  style={scaleImage(28, 28)}
+                />
+              ),
+              label: " X N",
+              onPress: () => console.log(),
+            },
+            {
+              iconLabel: (
+                <Image
+                  source={require("../assets/superball.png")}
+                  style={scaleImage(28, 28)}
+                />
+              ),
+              label: " X N",
+              onPress: () => console.log(),
+            },
+            { label: "", onPress: () => console.log() },
+            { label: "", onPress: () => console.log() },
+          ]);
+        },
+      },
+      { label: "", onPress: () => console.log() },
+      {
+        label: "← Volver",
+        onPress: () => goMain(),
+      },
+      { label: "", onPress: () => console.log() },
+    ];
+
+    setButtons(newButtons);
   }
 
   async function handleMenu() {

@@ -17,6 +17,7 @@ import {
 const { width: SCREEN_W } = Dimensions.get("window");
 
 export type ActionButton = {
+  iconLabel?: React.ReactNode;
   label: string;
   onPress: () => void;
   disabled?: boolean;
@@ -62,6 +63,7 @@ export default function GameLayout({
               style={styles.buttonBg}
               resizeMode="stretch"
             >
+              {btn.iconLabel}
               <Text style={styles.buttonText}>{btn.label}</Text>
             </ImageBackground>
           </TouchableOpacity>
@@ -109,6 +111,7 @@ const styles = StyleSheet.create({
   },
   buttonBg: {
     flex: 1,
+    flexDirection: "row",
     justifyContent: "center",
     alignItems: "center",
     height: BTN_HEIGHT / 2,

@@ -1,5 +1,5 @@
 import { prologEngine } from "../src/prolog/PrologEngine";
-import { Location } from "./interfaces";
+import { Backpack, Location } from "./interfaces";
 
 const query = (goal: string) => prologEngine.queryAll(goal);
 const queryOne = (goal: string) => prologEngine.queryOne(goal);
@@ -35,9 +35,13 @@ export class PrologService {
     console.log(result);
   }
 
-  async getBackpackContent() {
+  async getBackpackContent(): Promise<Backpack> {
     const result = await query("backpack(Money, Pokeballs, Team)");
-    console.log(result);
+    const backpack: Backpack = {
+      money: result[0].Money,
+      pokeballs: result[0].Pokeballs,
+    };
+    return backpack;
   }
 
   async getMoveLocations(): Promise<string[]> {

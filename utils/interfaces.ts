@@ -3,4 +3,13 @@ export interface Location {
   place: string;
 }
 
+export interface Backpack {
+  money: number;
+  pokeballs: Pokeball[];
+}
+
+export interface Pokeball {
+  type: string;
+}
+
 export interface Pokemon {}
