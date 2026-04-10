@@ -348,11 +348,11 @@ export const engine = `
     %!  usePokeball(+Pokeball)
     %   removes given pokeball from backpack
     usePokeball(Pokeball):-
-        backpack(Money, Medals, Pokeballs, Team),
+        backpack(Money, Badges, Pokeballs, Team),
         select(Pokeball, Pokeballs, New),
 
         retract(backpack(_, _, _, _)),
-        asserta(backpack(Money, Medals, New, Team)).
+        asserta(backpack(Money, Badges, New, Team)).
 
     %! chooseStarter(+Pokemon)
     %  assert as given pokemon as owned
@@ -366,8 +366,7 @@ export const engine = `
         allEvolutions(Pokemon, AllEvolutions),
         evolved(Pokemon, Level, AllEvolutions, Evolutions),
 
-        retractall(owned(_, _, _, _, _, _, _, _, _)),
-        asserta(owned(Tag, Pokemon, fainted, Level, Atk, 0, HP, 0, Moves)),
+        asserta(owned(Tag, Pokemon, healthy, Level, Atk, HP, HP, 0, Moves)),
 
         retractall(ownedEvolutions(_, _)),
         asserta(ownedEvolutions(Tag, Evolutions)).
@@ -518,19 +517,16 @@ export const engine = `
     %   generate random encounter of given type
     encounter(Route, pokemon):-
         encounterLevel(Route, Level),
-        randomPokemon(Pokemon),
-        pokemonStats(Pokemon, Level, Atk, HP, Moves),
 
         % change pokemon to its evolved form (if it applies)
+        randomPokemon(Pokemon),
         currentEvolution(Pokemon, Level, Result),
 
         % set type of fight in winner predicate
         retract(winner(_, _)),
         asserta(winner(none, pokemon)),
-
-        % assert enemy
-        retractall(enemy(_, _, _, _, _, _)),
-        asserta(enemy(Result, healthy, Level, Atk, HP, HP, Moves)).
+        
+        setEnemy(Result, Level).
 
     encounter(Route, trainer):-
         encounterLevel(Route, Level),
@@ -540,16 +536,20 @@ export const engine = `
         retract(trainer(Route, Trainer, _, Pokemon, Defeated)),
         asserta(trainer(Route, Trainer, Money, Pokemon, Defeated)),
 
-        % pokemon
-        baseForm(Pokemon, Base),
-        pokemonStats(Base, Level, Atk, HP, Moves),
-
         % set type of fight in winner predicate
         retract(winner(_, _)),
         asserta(winner(none, trainer)),
         
+        setEnemy(Pokemon, Level).
+
+    %!  setEnemy(+Pokemon, -Level)
+    %   helper to set enemy stats
+    setEnemy(Pokemon, Level):-
+        baseForm(Pokemon, Base),
+        pokemonStats(Base, Level, Atk, HP, Moves),
+        
         % assert enemy
-        retractall(enemy(_, _, _, _, _, _)),
+        retract(enemy(_, _, _, _, _, _)),
         asserta(enemy(Pokemon, healthy, Level, Atk, HP, HP, Moves)).
 
     % ==== BATTLE LOGIC ====
@@ -659,7 +659,27 @@ export const engine = `
 
     %!  checkWinner(+Round)
     %   checks winner given round number
-    checkWinner(4):-
+    checkWinner(8):-
+        winner(_, gym),
+
+        % check hp lost for opponent
+        enemy(_, _, _, _, EnemyCurrent, EnemyMax, _),
+        calculate(EnemyCurrent, EnemyMax, EnemyMax, EnemyLost),
+
+        % check hp lost for player
+        activePokemon(Tag),
+        startingHP(PlayerStarting),
+        owned(Tag, _, _, _, _, PlayerCurrent, PlayerMax, _, _),
+        calculate(PlayerCurrent, PlayerStarting, PlayerMax, PlayerLost),
+
+        PlayerLost > EnemyLost,
+        retract(winner(_, Type)),
+        asserta(winner(enemy, Type)),
+        
+        retract(owned(Tag, B, _, D, E, _, G, H, I)),
+        asserta(owned(Tag, B, fainted, D, E, 0, G, H, I)).
+
+    checkWinner(8):-
         % check hp lost for opponent
         enemy(_, _, _, _, EnemyCurrent, EnemyMax, _),
         calculate(EnemyCurrent, EnemyMax, EnemyMax, EnemyLost),
@@ -674,7 +694,7 @@ export const engine = `
         retract(winner(_, Type)),
         asserta(winner(enemy, Type)).
 
-    checkWinner(4):-
+    checkWinner(8):-
         % check hp lost for opponent
         enemy(_, _, _, _, EnemyCurrent, EnemyMax, _),
         calculate(EnemyCurrent, EnemyMax, EnemyMax, EnemyLost),
@@ -689,7 +709,7 @@ export const engine = `
         retract(winner(_, Type)),
         asserta(winner(player, Type)).
 
-    checkWinner(4):-
+    checkWinner(8):-
         % check hp lost for opponent
         enemy(_, _, _, _, EnemyCurrent, EnemyMax, _),
         calculate(EnemyCurrent, EnemyMax, EnemyMax, EnemyLost),
@@ -749,22 +769,30 @@ export const engine = `
 
         inRoute(Route, _),
         trainer(Route, _, Money, _, _),
-        backpack(CurrentMoney, Medals, Pokeballs, Team),
+        backpack(CurrentMoney, Badges, Pokeballs, Team),
 
         Gained is (Money * 0.5),
         NewMoney is CurrentMoney + Gained,
 
         retract(backpack(_, _, _, _)),
-        asserta(backpack(NewMoney, Medals, Pokeballs, Team)).
+        asserta(backpack(NewMoney, Badges, Pokeballs, Team)).
 
     gainedMoney(Gained):-
         winner(enemy, trainer),
-        backpack(Money, Medals, Pokeballs, Team),
+        backpack(Money, Badges, Pokeballs, Team),
         
         Gained is -(Money * 0.1),
         NewMoney is Money + Gained,
         retract(backpack(_, _, _, _)),
-        asserta(backpack(NewMoney, Medals, Pokeballs, Team)).
+        asserta(backpack(NewMoney, Badges, Pokeballs, Team)).
+
+    gainedMoney(300):-
+        winner(player, gym),
+        backpack(Money, Badges, Pokeballs, Team),
+
+        NewMoney is Money + 300,
+        retract(backpack(_, _, _, _)),
+        asserta(backpack(NewMoney, Badges, Pokeballs, Team)).
 
     gainedMoney(0).
 
@@ -791,7 +819,117 @@ export const engine = `
         exitBattle.
 
     endBattle:-
-        winner(_, _),
+        winner(player, trainer),
+        % mark trainer in route as defeated
+        inRoute(R, _),
+        retract(trainer(R, T, M, P, _)),
+        asserta(trainer(R, T, M, P, yes)),
         allowTravel,
         exitBattle.
+
+    endBattle:-
+        winner(_, pokemon),
+        allowTravel,
+        exitBattle.
+
+    endBattle:-
+        winner(player, gym),
+        queue([Next | Rest], Level),
+        saveExp,
+
+        % reset winner but stay in battle
+        retract(winner(_, _)),
+        asserta(winner(none, gym)),
+
+        retract(queue(_, _)),
+        asserta(queue(Rest, Level)),
+        
+        setEnemy(Next, Level).
+
+    endBattle:-
+        winner(player, gym),
+        queue([], _),
+        saveExp,
+        location(City, _),
+        gymnasium(City, Leader, _, _),
+        gymLeader(Leader, Level, Team, no),
+        retract(gymLeader(_, _, _, _)),
+        asserta(gymLeader(Leader, Level, Team, yes)),
+        exitBattle.
+
+    endBattle:-
+        winner(enemy, gym),
+        backpack(_, _, _, Team),
+        isTeamNuked(Team),
+        exitBattle.
+
+    endBattle:-
+        winner(_, gym),
+        % reset winner but stay in battle
+        retract(winner(_, _)),
+        asserta(winner(none, gym)).
+
+    % ==== GYMNASIUM BATTLES ====
+    %!  challenge
+    %   starts battle against leader of current city's gymnasium, will
+    %   return false if it has been defeated already
+    challenge:-
+        % get leader
+        location(City, _),
+        gymnasium(City, Leader, _, _),
+        gymLeader(Leader, Level, [First | Rest], no),
+
+        % set type of fight in winner predicate
+        retract(winner(_, _)),
+        asserta(winner(none, gym)),
+
+        retract(queue(_, _)),
+        asserta(queue(Rest, Level)),
+
+        setEnemy(First, Level),
+        enterBattle.
+
+    %!  saveExp
+    %   helper to save experience gained in gymnasium
+    saveExp:-
+        gainedExp(Gained),
+        gymExp(Record),
+        add(Gained, Record, S),
+        retract(gymExp(_)),
+        retract(gymExp(S)).
+
+    %!  gainBadge
+    %   adds badge tp backpack
+    gainBadge:-
+        location(City, _),
+        gymnasium(City, _, _, Badge),
+        backpack(A, Badges, B, C),
+        add(Badge, Badges, New),
+
+        retract(backpack(_, _, _, _)),
+        asserta(backpack(A, New, B, C)).
+
+    %!  isTeamNuked(+Team)
+    %   returns false if player has pokemon with hp left
+    isTeamNuked([]).
+    isTeamNuked([Tag-_ | R]) :-
+        owned(Tag, _, fainted, _, _, _, _, _, _),
+        isTeamNuked(R).
+
+    % ==== GAME BEATEN ====
+    %!  allBadges
+    %   returns true if player has gained all badges
+    allBadges:-
+        backpack(_, Badges, _, _),
+        findall(B, gymnasium(_, _, _, B), All),
+        msort(Badges, Sorted),
+        msort(All, Sorted).
+
+    %!  caughtAll
+    %   returns true if player has caught at least one pokemon for every type
+    caughtAll:-
+        findall(T, (owned(_, P, _, _, _, _, _, _, _), type(P, T)), Owned),
+        findall(O, type(_, O), All),
+        sort(Owned, Sorted),
+        sort(All, Sorted).
 `;
