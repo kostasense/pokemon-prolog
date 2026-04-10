@@ -32,7 +32,8 @@ export const engine = `
         Next is Tag + 1,
         asserta(nextTag(Next)).
 
-    % mark moves as learned or forgotten in a given list
+    %!  learnMoves(+Learned, +Moves, -Updated)
+    %   update moves as learned or forgotten
     learnMoves(_, [], []).
 
     learnMoves(Learned, [M-locked | T], [M-learned | R]):-
@@ -56,25 +57,64 @@ export const engine = `
     getLearned([M-learned | T], [M | R]):- getLearned(T, R).
     getLearned([_-_ | T], R):- getLearned(T, R).
 
-    % show player learned moves only
-    showLearned(Tag, Learned):- owned(Tag, _, _, _, _, _, _, _, Moves), getLearned(Moves, Learned).
-
-    % given (base) pokemon level get its current evolution
-    currentEvolution(Pokemon, Level, Result) :-
-        evolves(Pokemon, Evolution, Required),
-        Level >= Required,
-        currentEvolution(Evolution, Level, Result).
-
-    currentEvolution(Pokemon, _, Pokemon).
-
     % ==== POKEMON ====
+    %!  nextLevel(+Level, -RequiredExp)
+    %   calculates required experience for next level
     nextLevel(Level, RequiredExp):- RequiredExp is 50 + (20 * Level).
 
-    % learns move at level ?
+    %!  newMoves(-List)
+    %   returns new moves for <active> pokemon, will return false if there isn't any    
+    newMove(NewMoves):-
+        activePokemon(Tag),
+        owned(Tag, Pokemon, _, Level, _, _, _, _, Moves),
+        type(Pokemon, Type),
+        findall(M, (learnsAt(Type, M, L), L =< Level, member(M-locked, Moves)), All),
+        sort(All, NewMoves).
+
+    %!  forgetMove(+Move)
+    %   marks given move as forgotten for <active> pokemon
+    forgetMove(Move):-
+        activePokemon(Tag),
+        owned(Tag, A, B, C, D, E, F, G, Moves),
+        updateMoves(Move, forgotten, Moves, New),
+        
+        retract(owned(Tag, _, _, _, _, _, _, _, _)),
+        asserta(owned(Tag, A, B, C, D, E, F, G, New)).
+
+    %!  resolveMove(+Move, +Choice)
+    %   marks move as given choice (must be rejected or learned), will return false if choice = learned and pokemon knows four moves already
+    resolveMove(Move, learned):-
+        activePokemon(Tag),
+        owned(Tag, A, B, C, D, E, F, G, Moves),
+        getLearned(Moves, Learned),
+        length(Learned, Length),
+        Length < 4,
+        updateMoves(Move, learned, Moves, New),
+        
+        retract(owned(Tag, _, _, _, _, _, _, _, _)),
+        asserta(owned(Tag, A, B, C, D, E, F, G, New)).
+
+    resolveMove(Move, rejected):-
+        activePokemon(Tag),
+        owned(Tag, A, B, C, D, E, F, G, Moves),
+        updateMoves(Move, rejected, Moves, New),
+        
+        retract(owned(Tag, _, _, _, _, _, _, _, _)),
+        asserta(owned(Tag, A, B, C, D, E, F, G, New)).
+
+    %!  updateMoves(+Move, +State, +All, -New)
+    %   marks move as given state 
+    updateMoves(_, _, [], []).
+    updateMoves(M, State, [M-_ | T], [M-State | R]):- updateMoves(M, State, T, R).
+    updateMoves(Move, State, [M-S | T], [M-S | R]):- M \\= Move, updateMoves(Move, State, T, R).
+
+    %!  learnsAt(+Type, ?Move, ?Level)
+    %   returns when will a move be learned based on given type
     learnsAt(Type, Move, Level):- move(Move, Type, _, Level).
     learnsAt(_, Move, Level):- move(Move, normal, _, Level).
 
-    % all moves for a pokemon given type
+    %!  allMoves(+Type, -Moves)
+    %   all available moves for a pokemon
     allMoves(Type, Moves):- findall(M-locked, (move(M, Type, _, _) ; move(M, normal, _, _)), U), sort(U, Moves).
 
     %!  pokemonMoves(+Pokemon, +Level, -Moves)
@@ -89,14 +129,19 @@ export const engine = `
         pairs_values(T, M),
         learnMoves(M, AllMoves, Moves).
 
-    % base form given an evolved pokemon (or not)
-    baseForm(Pokemon, Base) :-
-        \\+ evolves(_, Pokemon, _),
-        Base = Pokemon.
+    %!  showLearned(+Tag, -Learned)
+    %   shows learned moves only
+    showLearned(Tag, Learned):- owned(Tag, _, _, _, _, _, _, _, Moves), getLearned(Moves, Learned).
 
-    baseForm(Pokemon, Base) :-
-        evolves(Pre, Pokemon, _),
-        baseForm(Pre, Base).
+    %!  currentEvolution(+Pokemon, +Level, -Result)
+    %   returns current stage of evolution of given pokemon
+    currentEvolution(Pokemon, Level, Result) :- evolves(Pokemon, Evolution, Required), Level >= Required, currentEvolution(Evolution, Level, Result).
+    currentEvolution(Pokemon, _, Pokemon).
+
+    %!  baseForm(+Pokemon, -Base)
+    %   returns base form of a given pokemon
+    baseForm(Pokemon, Base) :- \\+ evolves(_, Pokemon, _), Base = Pokemon.
+    baseForm(Pokemon, Base) :- evolves(Pre, Pokemon, _), baseForm(Pre, Base).
 
     %!  allEvolutions(+Pokemon, -Evolutions) 
     %   all evolutions for a pokemon
@@ -113,8 +158,12 @@ export const engine = `
     evolved(Pokemon, Level, [E-locked | T], [E-evolved | R]):- evolves(Pokemon, E, L), L =< Level, evolved(E, Level, T, R).
     evolved(_, Level, [E-S | T], [E-S | R]):- evolved(E, Level, T, R).
 
-    % get scaled stats
+    %   scaledAttack(+BaseAtk, +Level, -Atk)
+    %   returns attack based on level
     scaledAttack(BaseAtk, Level, Attack) :- Attack is BaseAtk + (Level * 2).
+
+    %   scaledHP(+BaseHP, +Level, -Atk)
+    %   returns max hp based on level
     scaledHP(BaseHP, Level, MaxHP) :- MaxHP is BaseHP + (Level * 3).
 
     %! pokemonHealth(+CurrentHP, +MaxHP, -State)
@@ -135,28 +184,28 @@ export const engine = `
     %!  addToTeam(+Tag, +Type)
     %   asserts new team with pokemon or egg added
     addToTeam(Tag, Type):-
-        backpack(A, B, Team),
+        backpack(A, B, C, Team),
         addPair(Tag, Type, Team, NewTeam),
         
-        retract(backpack(_, _, _)),
-        asserta(backpack(A, B, NewTeam)).
+        retract(backpack(_, _, _, _)),
+        asserta(backpack(A, B, C, NewTeam)).
 
     %!  removeFromTeam(+Tag)
     %   new list with given pokemon or egg removed
     removeFromTeam(Tag):-
         owned(Tag, Pokemon, _, _, _, _, _, _, _),
-        backpack(A, B, Team),
+        backpack(A, B, C, Team),
         select(Tag-Pokemon, Team, NewTeam),
 
-        retract(backpack(_, _, _)),
-        asserta(backpack(A, B, NewTeam)).
+        retract(backpack(_, _, _, _)),
+        asserta(backpack(A, B, C, NewTeam)).
 
     removeFromTeam(Tag):-
-        backpack(A, B, Team),
+        backpack(A, B, C, Team),
         select(Tag-egg, Team, NewTeam),
 
-        retract(backpack(_, _, _)),
-        asserta(backpack(A, B, NewTeam)).
+        retract(backpack(_, _, _, _)),
+        asserta(backpack(A, B, C, NewTeam)).
 
     %!  sendToComputer(+Tag, +Type)
     sendToComputer(Tag, Type):-
@@ -214,14 +263,17 @@ export const engine = `
     checkEgg([_-_ | T], R):- checkEgg(T, R).
 
     %! hatchEgg(+Tag)
-    %  asserts as owned given egg
+    %  asserts given egg as owned
     hatchEgg(Tag):-
         playerEggs(Tag, Pokemon, _),
         random_between(2, 4, Level),
         pokemonStats(Pokemon, Level, Atk, HP, Moves),
         
         retract(playerEggs(Tag, _, _)),
-        asserta(owned(Tag, Pokemon, healthy, Level, Atk, HP, HP, 0, Moves)).
+        asserta(owned(Tag, Pokemon, healthy, Level, Atk, HP, HP, 0, Moves)), 
+        
+        removeFromTeam(Tag),
+        addToTeam(Tag, Pokemon).
 
     %!  attemptCatch(+Pokeball, -SavedIn)
     %   if successfull, will return if pokemon was saved in backpack or computer
@@ -242,7 +294,7 @@ export const engine = `
     %   asserts new owned pokemon if catch succeeded
     catchSuccess(Pokemon, State, Level, Atk, CurrentHP, MaxHP, Moves, backpack):-
         % check if there's space in team
-        backpack(_, _, Team),
+        backpack(_, _, _, Team),
         length(Team, Length),
         Length < 4,
 
@@ -283,24 +335,24 @@ export const engine = `
     %   will return false if current money is less than required
     buyPokeball(Pokeball):-
         pokeball(Pokeball, Cost),
-        backpack(Money, P, Team),
+        backpack(Money, M, P, Team),
 
         Cost =< Money,
         NewMoney is Money - Cost,
 
         add(Pokeball, P, NewP),
 
-        retract(backpack(_, _, _)),
-        asserta(backpack(NewMoney, NewP, Team)).
+        retract(backpack(_, _, _, _)),
+        asserta(backpack(NewMoney, M, NewP, Team)).
 
     %!  usePokeball(+Pokeball)
     %   removes given pokeball from backpack
     usePokeball(Pokeball):-
-        backpack(Money, Pokeballs, Team),
+        backpack(Money, Medals, Pokeballs, Team),
         select(Pokeball, Pokeballs, New),
 
-        retract(backpack(_, _, _)),
-        asserta(backpack(Money, New, Team)).
+        retract(backpack(_, _, _, _)),
+        asserta(backpack(Money, Medals, New, Team)).
 
     %! chooseStarter(+Pokemon)
     %  assert as given pokemon as owned
@@ -383,12 +435,15 @@ export const engine = `
         retract(ownedEvolutions(Tag, _)),
         asserta(ownedEvolutions(Tag, New)).
 
+    %!  updateEvolutions(+Evolution, +NewState, +All, -New)
+    %   marks given evolution as <evolved> or <rejected>
     updateEvolutions(_, _, [], []).
     updateEvolutions(E, NewState, [E-_ | T], [E-NewState | R]):- updateEvolutions(E, NewState, T, R).
     updateEvolutions(Evolution, NewState, [E-S | T], [E-S | R]):- E \\= Evolution, updateEvolutions(Evolution, NewState, T, R).
 
     % ==== EVENTS ====
-    %!  changes state to fighting
+    %!  enterBattle
+    %   changes state to fighting
     enterBattle:-
         retract(inBattle(_)),
         asserta(inBattle(yes)).
@@ -434,7 +489,7 @@ export const engine = `
     %!  pickUpItem(+Type, +Item, -SavedIn)
     pickUpItem(egg, Item, backpack):-
         % check if there's space in team
-        backpack(_, _, Team),
+        backpack(_, _, _, Team),
         length(Team, Length),
         Length < 4,
 
@@ -448,10 +503,10 @@ export const engine = `
         asserta(playerEggs(Tag, Item)).
 
     pickUpItem(pokeball, Item, backpack):-
-        backpack(A, Pokeballs, B),
+        backpack(A, B, Pokeballs, C),
         add(Item, Pokeballs, New),
-        retract(backpack(_, _, _)),
-        asserta(backpack(A, New, B)).
+        retract(backpack(_, _, _, _)),
+        asserta(backpack(A, B, New, C)).
 
     %!  encounterLevel(+Route, -Level)
     encounterLevel(Route, Level):-
@@ -694,38 +749,43 @@ export const engine = `
 
         inRoute(Route, _),
         trainer(Route, _, Money, _, _),
-        backpack(CurrentMoney, Pokeballs, Team),
+        backpack(CurrentMoney, Medals, Pokeballs, Team),
 
         Gained is (Money * 0.5),
         NewMoney is CurrentMoney + Gained,
 
-        retract(backpack(_, _, _)),
-        asserta(backpack(NewMoney, Pokeballs, Team)).
+        retract(backpack(_, _, _, _)),
+        asserta(backpack(NewMoney, Medals, Pokeballs, Team)).
 
     gainedMoney(Gained):-
         winner(enemy, trainer),
-        backpack(Money, Pokeballs, Team),
+        backpack(Money, Medals, Pokeballs, Team),
         
         Gained is -(Money * 0.1),
         NewMoney is Money + Gained,
-        retract(backpack(_, _, _)),
-        asserta(backpack(NewMoney, Pokeballs, Team)).
+        retract(backpack(_, _, _, _)),
+        asserta(backpack(NewMoney, Medals, Pokeballs, Team)).
 
     gainedMoney(0).
 
-    % exit battle
+    %!  allowTravel
+    %   asserts player's new location
     allowTravel:-
         inRoute(_, CityA),
         travel(CityA, plaza),
         retract(inRoute(_, _)),
         asserta(inRoute(none, none)).
 
+    %!  exitBattle
+    %   changes state from fighting to idle
     exitBattle:-
         retract(inBattle(_)),
         asserta(inBattle(no)),
         retract(idle(_)),
         asserta(idle(city)).
 
+    %!  endBattle
+    %   allows travel and/or exits battle based on battle winner 
     endBattle:-
         winner(enemy, trainer),
         exitBattle.
