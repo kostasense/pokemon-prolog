@@ -199,7 +199,7 @@ export default function MapScreen() {
   }
 
   async function handlePokemon() {
-    const pokemonsFetched = await prologService.getOwnedPokemons();
+    const pokemonsFetched = await prologService.getTeamPokemons();
 
     setPokemons(pokemonsFetched);
     setPokemonViewOpen(true);
@@ -273,7 +273,39 @@ export default function MapScreen() {
           ]);
         },
       },
-      { label: "", onPress: () => console.log() },
+      {
+        label: "Medallas",
+        onPress: async () => {
+          setMessage("Medallas conseguidas:");
+          setButtons([
+            {
+              iconLabel: (
+                <Image
+                  //source={require("../assets/pokeball.png")}
+                  style={scaleImage(24, 24)}
+                />
+              ),
+              label: "",
+              onPress: () => console.log(),
+            },
+            {
+              iconLabel: (
+                <Image
+                  //source={require("../assets/superball.png")}
+                  style={scaleImage(22, 22)}
+                />
+              ),
+              label: "",
+              onPress: () => console.log(),
+            },
+            {
+              label: "← Volver",
+              onPress: () => handleMochila(),
+            },
+            { label: "Ver más →", onPress: () => console.log() },
+          ]);
+        },
+      },
       {
         label: "← Volver",
         onPress: () => goMain(),
@@ -499,7 +531,58 @@ export default function MapScreen() {
   }
 
   function handleCurar() {
-    console.log("handle curar");
+    setPokemonViewOpen(true);
+    setMessage("Curar Pokémon");
+
+    const newButtons: ActionButton[] = [
+      {
+        label: "Curar completamente",
+        onPress: async () => {
+          const healed = await prologService.healTeam(pokemons);
+          if (healed) {
+            const pokemonsFetched = await prologService.getTeamPokemons();
+
+            setPokemons(pokemonsFetched);
+            setMessage("Equipo curado completamente\n\nCuidense mucho :)");
+
+            const newButtons: ActionButton[] = [
+              {
+                label: "← Volver",
+                onPress: () => {
+                  setPokemonViewOpen(false);
+                  goMain();
+                },
+              },
+              {
+                label: "",
+                onPress: () => console.log(),
+              },
+              {
+                label: "",
+                onPress: () => console.log(),
+              },
+              {
+                label: "",
+                onPress: () => console.log(),
+              },
+            ];
+
+            setButtons(newButtons);
+          }
+        },
+      },
+      {
+        label: "",
+        onPress: () => console.log(),
+      },
+      {
+        label: "← Volver",
+        onPress: () => goMain(),
+      },
+      { label: "", onPress: () => console.log() },
+    ];
+
+    setButtons(newButtons);
   }
 
   function handleGimnasio() {

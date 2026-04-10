@@ -3,14 +3,10 @@
  * Carta de visualizacion de los datos del pokemon.
  *
  */
-import { scaleImage } from "@/utils/helpers";
+import { isEgg, scaleImage } from "@/utils/helpers";
 import { Egg, Pokemon } from "@/utils/interfaces";
 import { pokemonSprites } from "@/utils/sprites";
 import { Dimensions, Image, StyleSheet, Text, View } from "react-native";
-
-function isEgg(pokemon: Pokemon | Egg): pokemon is Egg {
-  return (pokemon as Egg).distanceLeft !== undefined;
-}
 
 export default function PokemonCard({
   pokemon,

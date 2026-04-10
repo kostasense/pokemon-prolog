@@ -1,4 +1,5 @@
 import { prologEngine } from "../src/prolog/PrologEngine";
+import { isEgg } from "./helpers";
 import { Backpack, Egg, Location, Pokeball, Pokemon } from "./interfaces";
 
 const query = (goal: string) => prologEngine.queryAll(goal, false);
@@ -30,7 +31,7 @@ export class PrologService {
     return location;
   }
 
-  async getOwnedPokemons(): Promise<(Pokemon | Egg)[]> {
+  async getTeamPokemons(): Promise<(Pokemon | Egg)[]> {
     const result = await query("backpack(Money, Pokeballs, Team)");
     const pokemons: (Pokemon | Egg)[] = [];
     for (const pair of result[0].Team) {
@@ -151,6 +152,18 @@ export class PrologService {
     }
 
     return [true, 0];
+  }
+
+  async healTeam(pokemons: (Pokemon | Egg)[]): Promise<boolean> {
+    for (const pokemon of pokemons) {
+      if (isEgg(pokemon)) continue;
+
+      const tag = pokemon.tag;
+
+      const cured = await prove(`healPokemon(${tag})`);
+      if (!cured) return false;
+    }
+    return true;
   }
 }
 
