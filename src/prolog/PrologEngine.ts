@@ -66,7 +66,7 @@ class PrologEngine {
   /**
    * Ejecuta una query y devuelve TODAS las soluciones
    */
-  async queryAll(goal: string): Promise<Substitution[]> {
+  async queryAll(goal: string, all?: boolean): Promise<Substitution[]> {
     if (!this.initialized) throw new Error("Motor Prolog no inicializado");
 
     // tau-prolog requiere punto al final de cada query
@@ -88,7 +88,11 @@ class PrologEngine {
                   }
                 }
                 solutions.push(sub);
-                getNext(); // Busca siguiente solucion
+                if (all) {
+                  getNext(); // Busca siguiente solucion
+                } else {
+                  resolve(solutions);
+                }
               },
               fail: () => resolve(solutions), // No mas soluciones
               error: (err: any) =>
@@ -112,7 +116,7 @@ class PrologEngine {
    * Ejecuta una query y devuelve solo la PRIMERA solucion
    */
   async queryOne(goal: string): Promise<Substitution | null> {
-    const all = await this.queryAll(goal);
+    const all = await this.queryAll(goal, false);
     return all.length > 0 ? all[0] : null;
   }
 

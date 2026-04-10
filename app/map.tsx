@@ -1,11 +1,19 @@
 /* eslint-disable react-hooks/exhaustive-deps */
 import React, { useEffect, useRef, useState } from "react";
-import { Animated, Image, ScrollView, StyleSheet, View } from "react-native";
+import {
+  Animated,
+  Dimensions,
+  Image,
+  ScrollView,
+  StyleSheet,
+  View,
+} from "react-native";
 
+import PokemonCard from "@/components/PokemonCard";
 import GameLayout, { ActionButton } from "../components/GameLayout";
 import { getLocationById } from "../constants/mapLocations";
 import { scaleImage } from "../utils/helpers";
-import { Location } from "../utils/interfaces";
+import { Egg, Location, Pokemon } from "../utils/interfaces";
 import { prologService } from "../utils/PrologService";
 
 const MAP_W = 600;
@@ -21,6 +29,8 @@ export default function MapScreen() {
   });
   const [message, setMessage] = useState("Elige una opción:");
   const [buttons, setButtons] = useState(getMainButtons());
+  const [pokemonViewOpen, setPokemonViewOpen] = useState(false);
+  const [pokemons, setPokemons] = useState<(Pokemon | Egg)[]>([]);
 
   const pulse = useRef(new Animated.Value(1)).current;
 
@@ -175,7 +185,36 @@ export default function MapScreen() {
   }
 
   async function handlePokemon() {
-    prologService.getOwnedPokemons();
+    const pokemonsFetched = await prologService.getOwnedPokemons();
+
+    setPokemons(pokemonsFetched);
+    setPokemonViewOpen(true);
+
+    setMessage("Pokémon en tu equipo:");
+
+    const newButtons: ActionButton[] = [
+      {
+        label: "← Volver",
+        onPress: () => {
+          goMain();
+          setPokemonViewOpen(false);
+        },
+      },
+      {
+        label: "",
+        onPress: () => console.log(),
+      },
+      {
+        label: "",
+        onPress: () => console.log(),
+      },
+      {
+        label: "",
+        onPress: () => console.log(),
+      },
+    ];
+
+    setButtons(newButtons);
   }
 
   async function handleMochila() {
@@ -193,23 +232,29 @@ export default function MapScreen() {
               iconLabel: (
                 <Image
                   source={require("../assets/pokeball.png")}
-                  style={scaleImage(28, 28)}
+                  style={scaleImage(24, 24)}
                 />
               ),
-              label: " X N",
+              label:
+                " x " + backpack.pokeballs.filter((p) => p === "normal").length,
               onPress: () => console.log(),
             },
             {
               iconLabel: (
                 <Image
                   source={require("../assets/superball.png")}
-                  style={scaleImage(28, 28)}
+                  style={scaleImage(22, 22)}
                 />
               ),
-              label: " X N",
+              label:
+                " x " +
+                backpack.pokeballs.filter((p) => p === "superball").length,
               onPress: () => console.log(),
             },
-            { label: "", onPress: () => console.log() },
+            {
+              label: "← Volver",
+              onPress: () => handleMochila(),
+            },
             { label: "", onPress: () => console.log() },
           ]);
         },
@@ -264,10 +309,22 @@ export default function MapScreen() {
             )}
           </View>
         </ScrollView>
+        {pokemonViewOpen && (
+          <View style={styles.pokemonOverlay}>
+            <View style={styles.pokemonGrid}>
+              {Array.from({ length: 6 }, (_, i) => (
+                <PokemonCard key={i} pokemon={pokemons[i] ?? null} />
+              ))}
+            </View>
+          </View>
+        )}
       </View>
     </GameLayout>
   );
 }
+
+const { width: SCREEN_W } = Dimensions.get("window");
+const { height: SCREEN_H } = Dimensions.get("window");
 
 const styles = StyleSheet.create({
   outer: {
@@ -279,5 +336,17 @@ const styles = StyleSheet.create({
   scrollContent: {
     alignItems: "center",
     justifyContent: "center",
+  },
+  pokemonOverlay: {
+    position: "absolute",
+    width: Math.min(SCREEN_W, MAP_W),
+    height: Math.min(SCREEN_H, MAP_H),
+    backgroundColor: "rgba(34, 139, 34, 0.75)",
+    zIndex: 10,
+  },
+  pokemonGrid: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    width: Math.min(SCREEN_W, MAP_W),
   },
 });

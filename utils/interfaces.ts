@@ -5,11 +5,23 @@ export interface Location {
 
 export interface Backpack {
   money: number;
-  pokeballs: Pokeball[];
+  pokeballs: string[];
 }
 
-export interface Pokeball {
-  type: string;
+export interface Pokemon {
+  tag: number;
+  pokemon: string;
+  state: string;
+  level: number;
+  atk: number;
+  currentHp: number;
+  maxHp: number;
+  exp: number;
+  moves: string[];
 }
 
-export interface Pokemon {}
+export interface Egg {
+  tag: number;
+  pokemon: string;
+  distanceLeft: number;
+}

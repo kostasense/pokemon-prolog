@@ -1,17 +1,12 @@
 import GameLayout, { ActionButton } from "@/components/GameLayout";
 import { scaleImage } from "@/utils/helpers";
+import { pokemonSprites } from "@/utils/pokemonSprites";
 import { prologService } from "@/utils/PrologService";
 import { router } from "expo-router";
 import { useEffect, useRef, useState } from "react";
 import { Animated, Dimensions, Image, StyleSheet, View } from "react-native";
 
 const POKEBALL_SIZE = 64;
-
-const SPRITES: Record<string, any> = {
-  CHARMANDER: require("../assets/pokemon/sprites/CHARMANDER.png"),
-  BULBASAUR: require("../assets/pokemon/sprites/BULBASAUR.png"),
-  SQUIRTLE: require("../assets/pokemon/sprites/SQUIRTLE.png"),
-};
 
 function PokeballRow({
   starters,
@@ -209,7 +204,7 @@ export default function IntroScreen() {
               resizeMode="stretch"
             />
             <Image
-              source={SPRITES[selectedPokemon]}
+              source={pokemonSprites[selectedPokemon]}
               style={[scaleImage(120, 120), { position: "absolute" }]}
               resizeMode="contain"
             />

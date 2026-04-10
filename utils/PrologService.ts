@@ -1,8 +1,8 @@
 import { prologEngine } from "../src/prolog/PrologEngine";
-import { Backpack, Location } from "./interfaces";
+import { Backpack, Egg, Location, Pokemon } from "./interfaces";
 
-const query = (goal: string) => prologEngine.queryAll(goal);
-const queryOne = (goal: string) => prologEngine.queryOne(goal);
+const query = (goal: string) => prologEngine.queryAll(goal, false);
+const queryAll = (goal: string) => prologEngine.queryAll(goal);
 const prove = (goal: string) => prologEngine.prove(goal);
 const assert = (fact: string) => prologEngine.assert(fact);
 const retract = (fact: string) => prologEngine.retract(fact);
@@ -30,9 +30,51 @@ export class PrologService {
     return location;
   }
 
-  async getOwnedPokemons() {
+  async getOwnedPokemons(): Promise<(Pokemon | Egg)[]> {
     const result = await query("backpack(Money, Pokeballs, Team)");
-    console.log(result);
+    const pokemons: (Pokemon | Egg)[] = [];
+    for (const pair of result[0].Team) {
+      const tag = pair.args[0];
+      const name = pair.args[1];
+
+      if (name === "egg") {
+        const result = await query(`playerEggs(${tag}, Pokemon, DistanceLeft)`);
+
+        const webo: Egg = {
+          tag: tag,
+          pokemon: result[0].Pokemon.toUpperCase(),
+          distanceLeft: result[0].DistanceLeft,
+        };
+
+        pokemons.push(webo);
+      } else {
+        const result = await query(
+          `owned(${tag}, Pokemon, State, Level, Atk, CurrentHP, MaxHP, Exp, Moves)`,
+        );
+
+        const pokemon: Pokemon = {
+          tag: tag,
+          pokemon: result[0].Pokemon.toUpperCase(),
+          state: result[0].State.toUpperCase(),
+          level: result[0].Level,
+          atk: result[0].Atk,
+          currentHp: result[0].CurrentHP,
+          maxHp: result[0].MaxHP,
+          exp: result[0].Exp,
+          moves: [],
+        };
+
+        for (const pairMoves of result[0].Moves) {
+          if (pairMoves.args[1] === "learned") {
+            pokemon.moves.push(pairMoves.args[0]);
+          }
+        }
+
+        pokemons.push(pokemon);
+      }
+    }
+
+    return pokemons;
   }
 
   async getBackpackContent(): Promise<Backpack> {
