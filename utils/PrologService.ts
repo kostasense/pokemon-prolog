@@ -32,7 +32,7 @@ export class PrologService {
   }
 
   async getTeamPokemons(): Promise<(Pokemon | Egg)[]> {
-    const result = await query("backpack(Money, Pokeballs, Team)");
+    const result = await query("backpack(Money, Medals, Pokeballs, Team)");
     const pokemons: (Pokemon | Egg)[] = [];
     for (const pair of result[0].Team) {
       const tag = pair.args[0];
@@ -79,9 +79,11 @@ export class PrologService {
   }
 
   async getBackpackContent(): Promise<Backpack> {
-    const result = await query("backpack(Money, Pokeballs, Team)");
+    const result = await query("backpack(Money, Medals, Pokeballs, Team)");
+    console.log(result);
     const backpack: Backpack = {
       money: result[0].Money,
+      medals: result[0].Medals,
       pokeballs: result[0].Pokeballs,
     };
     return backpack;

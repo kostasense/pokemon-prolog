@@ -367,7 +367,7 @@ export const engine = `
         evolved(Pokemon, Level, AllEvolutions, Evolutions),
 
         retractall(owned(_, _, _, _, _, _, _, _, _)),
-        asserta(owned(Tag, Pokemon, healthy, Level, Atk, HP, HP, 0, Moves)),
+        asserta(owned(Tag, Pokemon, fainted, Level, Atk, 0, HP, 0, Moves)),
 
         retractall(ownedEvolutions(_, _)),
         asserta(ownedEvolutions(Tag, Evolutions)).

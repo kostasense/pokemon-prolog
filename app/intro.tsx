@@ -1,7 +1,7 @@
 import GameLayout, { ActionButton } from "@/components/GameLayout";
 import { scaleImage } from "@/utils/helpers";
 import { prologService } from "@/utils/PrologService";
-import { pokemonSprites } from "@/utils/sprites";
+import { pokeballSprites, pokemonSprites } from "@/utils/sprites";
 import { router } from "expo-router";
 import { useEffect, useRef, useState } from "react";
 import { Animated, Dimensions, Image, StyleSheet, View } from "react-native";
@@ -57,7 +57,7 @@ function PokeballRow({
         return (
           <Animated.Image
             key={i}
-            source={require("../assets/pokeball.png")}
+            source={pokeballSprites["normal"]}
             style={[
               styles.pokeball,
               isSelected && { transform: [{ rotate: rotation }] },

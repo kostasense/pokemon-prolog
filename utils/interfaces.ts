@@ -5,6 +5,7 @@ export interface Location {
 
 export interface Backpack {
   money: number;
+  medals: string[];
   pokeballs: string[];
 }
 

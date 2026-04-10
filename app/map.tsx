@@ -10,7 +10,7 @@ import {
 } from "react-native";
 
 import PokemonCard from "@/components/PokemonCard";
-import { pokeballSprites } from "@/utils/sprites";
+import { medalSprites, pokeballSprites } from "@/utils/sprites";
 import GameLayout, { ActionButton } from "../components/GameLayout";
 import { getLocationById } from "../constants/mapLocations";
 import { scaleImage } from "../utils/helpers";
@@ -139,7 +139,7 @@ export default function MapScreen() {
     setMessage("Mover\n\n¿A dónde quieres ir?");
 
     const actualIndex = startIndex % cities.length;
-    const nextIndex = (actualIndex + 2) % cities.length;
+    const nextIndex = actualIndex + 2 >= cities.length ? 0 : actualIndex + 2;
 
     const city1 = cities[actualIndex];
     const city2 = cities[actualIndex + 1];
@@ -245,7 +245,7 @@ export default function MapScreen() {
             {
               iconLabel: (
                 <Image
-                  source={require("../assets/pokeball.png")}
+                  source={pokeballSprites["normal"]}
                   style={scaleImage(24, 24)}
                 />
               ),
@@ -256,7 +256,7 @@ export default function MapScreen() {
             {
               iconLabel: (
                 <Image
-                  source={require("../assets/superball.png")}
+                  source={pokeballSprites["superball"]}
                   style={scaleImage(22, 22)}
                 />
               ),
@@ -277,33 +277,7 @@ export default function MapScreen() {
         label: "Medallas",
         onPress: async () => {
           setMessage("Medallas conseguidas:");
-          setButtons([
-            {
-              iconLabel: (
-                <Image
-                  //source={require("../assets/pokeball.png")}
-                  style={scaleImage(24, 24)}
-                />
-              ),
-              label: "",
-              onPress: () => console.log(),
-            },
-            {
-              iconLabel: (
-                <Image
-                  //source={require("../assets/superball.png")}
-                  style={scaleImage(22, 22)}
-                />
-              ),
-              label: "",
-              onPress: () => console.log(),
-            },
-            {
-              label: "← Volver",
-              onPress: () => handleMochila(),
-            },
-            { label: "Ver más →", onPress: () => console.log() },
-          ]);
+          handleMedals(backpack.medals);
         },
       },
       {
@@ -311,6 +285,51 @@ export default function MapScreen() {
         onPress: () => goMain(),
       },
       { label: "", onPress: () => console.log() },
+    ];
+
+    setButtons(newButtons);
+  }
+
+  function handleMedals(medals: string[], startIndex = 0) {
+    const actualIndex = startIndex % medals.length;
+    const nextIndex = actualIndex + 2 >= medals.length ? 0 : actualIndex + 2;
+
+    const medal1 = medals[actualIndex];
+    const medal2 = medals[actualIndex + 1];
+
+    const newButtons: ActionButton[] = [
+      {
+        iconLabel: (
+          <Image
+            source={medal1 ? medalSprites[medal1] : ""}
+            style={scaleImage(24, 24)}
+          />
+        ),
+        label: medal1 ? "Medalla " + medal1.toUpperCase() : "",
+        onPress: () => {},
+      },
+      {
+        iconLabel: (
+          <Image
+            source={medal2 ? medalSprites[medal2] : ""}
+            style={scaleImage(24, 24)}
+          />
+        ),
+        label: medal2 ? "Medalla " + medal2.toUpperCase() : "",
+        onPress: () => {},
+      },
+      {
+        label: "← Volver",
+        onPress: () => handleMochila(),
+      },
+      {
+        label: medals.length > 2 ? "Ver más →" : "",
+        onPress: () => {
+          if (medals.length > 2) {
+            handleMedals(medals, nextIndex);
+          }
+        },
+      },
     ];
 
     setButtons(newButtons);
@@ -577,7 +596,10 @@ export default function MapScreen() {
       },
       {
         label: "← Volver",
-        onPress: () => goMain(),
+        onPress: () => {
+          setPokemonViewOpen(false);
+          goMain();
+        },
       },
       { label: "", onPress: () => console.log() },
     ];

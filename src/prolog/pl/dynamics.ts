@@ -1,6 +1,6 @@
 export const dynamics = `
     init_game:-
-        retractall(backpack(_, _, _, _)), asserta(backpack(100, [stone, dynamo], [], [])),
+        retractall(backpack(_, _, _, _)), asserta(backpack(100, [], [], [])),
         retractall(location(_, _)), asserta(location(littleroot, plaza)),
         retractall(activePokemon(_)), asserta(activePokemon(none)),
         retractall(playerEggs(_, _, _)), asserta(playerEggs(none, none, none)),
