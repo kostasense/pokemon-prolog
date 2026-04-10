@@ -6,13 +6,58 @@
 import { isEgg, scaleImage } from "@/utils/helpers";
 import { Egg, Pokemon } from "@/utils/interfaces";
 import { pokemonSprites } from "@/utils/sprites";
-import { Dimensions, Image, StyleSheet, Text, View } from "react-native";
+import { useEffect, useRef } from "react";
+import {
+  Animated,
+  Dimensions,
+  Image,
+  StyleSheet,
+  Text,
+  View,
+} from "react-native";
 
 export default function PokemonCard({
   pokemon,
+  selected = false,
 }: {
   pokemon: Pokemon | Egg | null;
+  selected?: boolean;
 }) {
+  const jumping = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    if (selected === false) {
+      jumping.setValue(0);
+      return;
+    }
+    const anim = Animated.loop(
+      Animated.sequence([
+        Animated.timing(jumping, {
+          toValue: 1,
+          duration: 150,
+          useNativeDriver: true,
+        }),
+        Animated.timing(jumping, {
+          toValue: -1,
+          duration: 150,
+          useNativeDriver: true,
+        }),
+        Animated.timing(jumping, {
+          toValue: 0,
+          duration: 150,
+          useNativeDriver: true,
+        }),
+      ]),
+    );
+    anim.start();
+    return () => anim.stop();
+  }, [selected, jumping]);
+
+  const jumpY = jumping.interpolate({
+    inputRange: [-1, 0, 1],
+    outputRange: [3, 0, -3], // -3 sube, 3 baja
+  });
+
   if (!pokemon) {
     return (
       <View style={styles.card}>
@@ -38,11 +83,28 @@ export default function PokemonCard({
   if (isEgg(pokemon)) {
     return (
       <View style={styles.card}>
-        <Image
-          source={require("../assets/message.png")}
-          style={[scaleImage(CARD_W, CARD_H), { position: "absolute" }]}
-          resizeMode="stretch"
-        />
+        <View style={{ width: CARD_W, height: CARD_H, position: "absolute" }}>
+          <Image
+            source={require("../assets/message.png")}
+            style={[scaleImage(CARD_W, CARD_H), { position: "absolute" }]}
+            resizeMode="stretch"
+          />
+          {selected && (
+            <View style={styles.selectedOverlay}>
+              <Image
+                source={require("../assets/pokeball-template.png")}
+                style={[
+                  scaleImage(CARD_W * 0.6, CARD_H * 0.6),
+                  {
+                    width: CARD_W,
+                    opacity: 0.5,
+                  },
+                ]}
+                resizeMode="contain"
+              />
+            </View>
+          )}
+        </View>
         <Image
           source={require("../assets/huevo.gif")}
           style={[
@@ -59,12 +121,29 @@ export default function PokemonCard({
 
   return (
     <View style={styles.card}>
-      <Image
-        source={require("../assets/message.png")}
-        style={[scaleImage(CARD_W, CARD_H), { position: "absolute" }]}
-        resizeMode="stretch"
-      />
-      <Image
+      <View style={{ width: CARD_W, height: CARD_H, position: "absolute" }}>
+        <Image
+          source={require("../assets/message.png")}
+          style={[scaleImage(CARD_W, CARD_H), { position: "absolute" }]}
+          resizeMode="stretch"
+        />
+        {selected && (
+          <View style={styles.selectedOverlay}>
+            <Image
+              source={require("../assets/pokeball-template.png")}
+              style={[
+                scaleImage(CARD_W * 0.6, CARD_H * 0.6),
+                {
+                  width: CARD_W,
+                  opacity: 0.5,
+                },
+              ]}
+              resizeMode="contain"
+            />
+          </View>
+        )}
+      </View>
+      <Animated.Image
         source={pokemon ? pokemonSprites[pokemon.pokemon] : null}
         style={[
           scaleImage(CARD_W * 0.7, CARD_H * 0.7),
@@ -72,6 +151,7 @@ export default function PokemonCard({
             width: CARD_W * 0.5,
             left: CARD_W / 25,
           },
+          selected && { transform: [{ translateY: jumpY }] },
         ]}
         resizeMode="contain"
       />
@@ -178,5 +258,14 @@ const styles = StyleSheet.create({
     width: 30,
     color: "#1a1a1a",
     textAlign: "center",
+  },
+  selectedOverlay: {
+    width: CARD_W * 0.9674,
+    height: CARD_H * 0.88,
+    borderRadius: 3,
+    backgroundColor: "rgba(59, 168, 42, 0.35)",
+    justifyContent: "center",
+    alignItems: "center",
+    margin: "auto",
   },
 });

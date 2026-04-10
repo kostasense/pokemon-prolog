@@ -9,7 +9,7 @@ import {
   View,
 } from "react-native";
 
-import PokemonCard from "@/components/PokemonCard";
+import PokemonTeam from "@/components/PokemonTeam";
 import { medalSprites, pokeballSprites } from "@/utils/sprites";
 import GameLayout, { ActionButton } from "../components/GameLayout";
 import { getLocationById } from "../constants/mapLocations";
@@ -305,7 +305,7 @@ export default function MapScreen() {
             style={scaleImage(24, 24)}
           />
         ),
-        label: medal1 ? "Medalla " + medal1.toUpperCase() : "",
+        label: medal1 ? " Medalla " + medal1.toUpperCase() : "",
         onPress: () => {},
       },
       {
@@ -315,7 +315,7 @@ export default function MapScreen() {
             style={scaleImage(24, 24)}
           />
         ),
-        label: medal2 ? "Medalla " + medal2.toUpperCase() : "",
+        label: medal2 ? " Medalla " + medal2.toUpperCase() : "",
         onPress: () => {},
       },
       {
@@ -646,15 +646,7 @@ export default function MapScreen() {
             )}
           </View>
         </ScrollView>
-        {pokemonViewOpen && (
-          <View style={styles.pokemonOverlay}>
-            <View style={styles.pokemonGrid}>
-              {Array.from({ length: 6 }, (_, i) => (
-                <PokemonCard key={i} pokemon={pokemons[i] ?? null} />
-              ))}
-            </View>
-          </View>
-        )}
+        {pokemonViewOpen && <PokemonTeam pokemons={pokemons} />}
       </View>
     </GameLayout>
   );

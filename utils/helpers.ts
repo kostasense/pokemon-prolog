@@ -13,4 +13,5 @@ export function scaleImage(width: number, height: number) {
  */
 export function isEgg(pokemon: Pokemon | Egg): pokemon is Egg {
   return (pokemon as Egg).distanceLeft !== undefined;
+  //return true;
 }
