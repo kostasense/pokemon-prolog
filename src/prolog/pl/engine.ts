@@ -184,28 +184,28 @@ export const engine = `
     %!  addToTeam(+Tag, +Type)
     %   asserts new team with pokemon or egg added
     addToTeam(Tag, Type):-
-        backpack(A, B, Team),
+        backpack(A, B, C, Team),
         addPair(Tag, Type, Team, NewTeam),
         
-        retract(backpack(_, _, _)),
-        asserta(backpack(A, B, NewTeam)).
+        retract(backpack(_, _, _, _)),
+        asserta(backpack(A, B, C, NewTeam)).
 
     %!  removeFromTeam(+Tag)
     %   new list with given pokemon or egg removed
     removeFromTeam(Tag):-
         owned(Tag, Pokemon, _, _, _, _, _, _, _),
-        backpack(A, B, Team),
+        backpack(A, B, C, Team),
         select(Tag-Pokemon, Team, NewTeam),
 
-        retract(backpack(_, _, _)),
-        asserta(backpack(A, B, NewTeam)).
+        retract(backpack(_, _, _, _)),
+        asserta(backpack(A, B, C, NewTeam)).
 
     removeFromTeam(Tag):-
-        backpack(A, B, Team),
+        backpack(A, B, C, Team),
         select(Tag-egg, Team, NewTeam),
 
-        retract(backpack(_, _, _)),
-        asserta(backpack(A, B, NewTeam)).
+        retract(backpack(_, _, _, _)),
+        asserta(backpack(A, B, C, NewTeam)).
 
     %!  sendToComputer(+Tag, +Type)
     sendToComputer(Tag, Type):-
@@ -294,7 +294,7 @@ export const engine = `
     %   asserts new owned pokemon if catch succeeded
     catchSuccess(Pokemon, State, Level, Atk, CurrentHP, MaxHP, Moves, backpack):-
         % check if there's space in team
-        backpack(_, _, Team),
+        backpack(_, _, _, Team),
         length(Team, Length),
         Length < 4,
 
@@ -335,24 +335,24 @@ export const engine = `
     %   will return false if current money is less than required
     buyPokeball(Pokeball):-
         pokeball(Pokeball, Cost),
-        backpack(Money, P, Team),
+        backpack(Money, M, P, Team),
 
         Cost =< Money,
         NewMoney is Money - Cost,
 
         add(Pokeball, P, NewP),
 
-        retract(backpack(_, _, _)),
-        asserta(backpack(NewMoney, NewP, Team)).
+        retract(backpack(_, _, _, _)),
+        asserta(backpack(NewMoney, M, NewP, Team)).
 
     %!  usePokeball(+Pokeball)
     %   removes given pokeball from backpack
     usePokeball(Pokeball):-
-        backpack(Money, Pokeballs, Team),
+        backpack(Money, Medals, Pokeballs, Team),
         select(Pokeball, Pokeballs, New),
 
-        retract(backpack(_, _, _)),
-        asserta(backpack(Money, New, Team)).
+        retract(backpack(_, _, _, _)),
+        asserta(backpack(Money, Medals, New, Team)).
 
     %! chooseStarter(+Pokemon)
     %  assert as given pokemon as owned
@@ -489,7 +489,7 @@ export const engine = `
     %!  pickUpItem(+Type, +Item, -SavedIn)
     pickUpItem(egg, Item, backpack):-
         % check if there's space in team
-        backpack(_, _, Team),
+        backpack(_, _, _, Team),
         length(Team, Length),
         Length < 4,
 
@@ -503,10 +503,10 @@ export const engine = `
         asserta(playerEggs(Tag, Item)).
 
     pickUpItem(pokeball, Item, backpack):-
-        backpack(A, Pokeballs, B),
+        backpack(A, B, Pokeballs, C),
         add(Item, Pokeballs, New),
-        retract(backpack(_, _, _)),
-        asserta(backpack(A, New, B)).
+        retract(backpack(_, _, _, _)),
+        asserta(backpack(A, B, New, C)).
 
     %!  encounterLevel(+Route, -Level)
     encounterLevel(Route, Level):-
@@ -749,22 +749,22 @@ export const engine = `
 
         inRoute(Route, _),
         trainer(Route, _, Money, _, _),
-        backpack(CurrentMoney, Pokeballs, Team),
+        backpack(CurrentMoney, Medals, Pokeballs, Team),
 
         Gained is (Money * 0.5),
         NewMoney is CurrentMoney + Gained,
 
-        retract(backpack(_, _, _)),
-        asserta(backpack(NewMoney, Pokeballs, Team)).
+        retract(backpack(_, _, _, _)),
+        asserta(backpack(NewMoney, Medals, Pokeballs, Team)).
 
     gainedMoney(Gained):-
         winner(enemy, trainer),
-        backpack(Money, Pokeballs, Team),
+        backpack(Money, Medals, Pokeballs, Team),
         
         Gained is -(Money * 0.1),
         NewMoney is Money + Gained,
-        retract(backpack(_, _, _)),
-        asserta(backpack(NewMoney, Pokeballs, Team)).
+        retract(backpack(_, _, _, _)),
+        asserta(backpack(NewMoney, Medals, Pokeballs, Team)).
 
     gainedMoney(0).
 
