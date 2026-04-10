@@ -5,7 +5,7 @@
  */
 import { scaleImage } from "@/utils/helpers";
 import { Egg, Pokemon } from "@/utils/interfaces";
-import { pokemonSprites } from "@/utils/pokemonSprites";
+import { pokemonSprites } from "@/utils/sprites";
 import { Dimensions, Image, StyleSheet, Text, View } from "react-native";
 
 function isEgg(pokemon: Pokemon | Egg): pokemon is Egg {

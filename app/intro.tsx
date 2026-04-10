@@ -1,7 +1,7 @@
 import GameLayout, { ActionButton } from "@/components/GameLayout";
 import { scaleImage } from "@/utils/helpers";
-import { pokemonSprites } from "@/utils/pokemonSprites";
 import { prologService } from "@/utils/PrologService";
+import { pokemonSprites } from "@/utils/sprites";
 import { router } from "expo-router";
 import { useEffect, useRef, useState } from "react";
 import { Animated, Dimensions, Image, StyleSheet, View } from "react-native";

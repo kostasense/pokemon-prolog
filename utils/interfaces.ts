@@ -25,3 +25,8 @@ export interface Egg {
   pokemon: string;
   distanceLeft: number;
 }
+
+export interface Pokeball {
+  name: string;
+  cost: number;
+}

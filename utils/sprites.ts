@@ -40,3 +40,8 @@ export const pokemonSprites: Record<string, any> = {
   CHANDELURE: require("../assets/pokemon/sprites/CHANDELURE.png"),
   MIMIKYU: require("../assets/pokemon/sprites/MIMIKYU.png"),
 };
+
+export const pokeballSprites: Record<string, any> = {
+  normal: require("../assets/pokeball.png"),
+  superball: require("../assets/superball.png"),
+};

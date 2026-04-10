@@ -1,8 +1,8 @@
 import { prologEngine } from "../src/prolog/PrologEngine";
-import { Backpack, Egg, Location, Pokemon } from "./interfaces";
+import { Backpack, Egg, Location, Pokeball, Pokemon } from "./interfaces";
 
 const query = (goal: string) => prologEngine.queryAll(goal, false);
-const queryAll = (goal: string) => prologEngine.queryAll(goal);
+const queryAll = (goal: string) => prologEngine.queryAll(goal, true);
 const prove = (goal: string) => prologEngine.prove(goal);
 const assert = (fact: string) => prologEngine.assert(fact);
 const retract = (fact: string) => prologEngine.retract(fact);
@@ -86,14 +86,14 @@ export class PrologService {
     return backpack;
   }
 
-  async getMoveLocations(): Promise<string[]> {
+  async getCitiesToMove(): Promise<string[]> {
     const results = await query("connectedCities(Cities)");
     const locations = results[0].Cities;
     return locations;
   }
 
-  async moveToLocation(location: string): Promise<boolean> {
-    const cleanName = location.toLowerCase().trim();
+  async moveToCity(city: string): Promise<boolean> {
+    const cleanName = city.toLowerCase().trim();
     const results = await prove(`selectCity(${cleanName})`);
     return results;
   }
@@ -105,6 +105,52 @@ export class PrologService {
       place: "",
     };
     return location;
+  }
+
+  async getLocationsInCity(): Promise<string[]> {
+    const city = (await this.getCurrentLocation()).main;
+
+    const results = await query(`city(${city}, Locations)`);
+    const locations = results[0].Locations;
+
+    return locations;
+  }
+
+  async moveToLocationInCity(location: string): Promise<boolean> {
+    const city = (await this.getCurrentLocation()).main;
+
+    const cleanName = location.toLowerCase().trim();
+    const results = await prove(`travel(${city}, ${cleanName})`);
+
+    return results;
+  }
+
+  async getPokeballs(): Promise<Pokeball[]> {
+    const results = await queryAll("pokeball(Name, Cost)");
+    const pokeballs: Pokeball[] = [];
+
+    for (const result of results) {
+      const pokeball: Pokeball = {
+        name: result.Name,
+        cost: result.Cost,
+      };
+
+      pokeballs.push(pokeball);
+    }
+
+    return pokeballs;
+  }
+
+  async buyPokeball(type: string, cant: number): Promise<[boolean, number]> {
+    while (cant > 0) {
+      const result = await prove(`buyPokeball(${type})`);
+      if (!result) {
+        return [false, cant];
+      }
+      cant--;
+    }
+
+    return [true, 0];
   }
 }
 

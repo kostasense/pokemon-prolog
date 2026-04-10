@@ -10,10 +10,11 @@ import {
 } from "react-native";
 
 import PokemonCard from "@/components/PokemonCard";
+import { pokeballSprites } from "@/utils/sprites";
 import GameLayout, { ActionButton } from "../components/GameLayout";
 import { getLocationById } from "../constants/mapLocations";
 import { scaleImage } from "../utils/helpers";
-import { Egg, Location, Pokemon } from "../utils/interfaces";
+import { Egg, Location, Pokeball, Pokemon } from "../utils/interfaces";
 import { prologService } from "../utils/PrologService";
 
 const MAP_W = 600;
@@ -97,11 +98,24 @@ export default function MapScreen() {
   }
 
   function getMainButtons(): ActionButton[] {
+    const placeLabels: Record<string, { label: string; onPress: () => void }> =
+      {
+        plaza: { label: "Mover", onPress: () => handleMover() },
+        tienda: { label: "Comprar", onPress: () => handleComprar() },
+        enfermeria: { label: "Curar Pokémon", onPress: () => handleCurar() },
+        gimnasio: { label: "Desafiar líder", onPress: () => handleGimnasio() },
+      };
+
+    const first = placeLabels[playerLocation.place] ?? {
+      label: "Mover",
+      onPress: () => handleMover(),
+    };
+
     return [
-      { label: "Mover", onPress: () => handleMover() },
+      { label: first.label, onPress: first.onPress },
       { label: "Pokémon", onPress: () => handlePokemon() },
       { label: "Mochila", onPress: () => handleMochila() },
-      { label: "Menú", onPress: () => handleMenu() },
+      { label: "Acciones", onPress: () => handleActions() },
     ];
   }
 
@@ -115,27 +129,27 @@ export default function MapScreen() {
   }
 
   async function handleMover(startIndex = 0) {
-    const locations = await prologService.getMoveLocations();
+    const cities = await prologService.getCitiesToMove();
 
-    if (!locations || locations.length === 0) {
+    if (!cities || cities.length === 0) {
       setMessage("No hay lugares a donde ir.");
       return;
     }
 
-    setMessage("¿A dónde quieres ir?");
+    setMessage("Mover\n\n¿A dónde quieres ir?");
 
-    const actualIndex = startIndex % locations.length;
-    const nextIndex = (actualIndex + 2) % locations.length;
+    const actualIndex = startIndex % cities.length;
+    const nextIndex = (actualIndex + 2) % cities.length;
 
-    const loc1 = locations[actualIndex];
-    const loc2 = locations[actualIndex + 1];
+    const city1 = cities[actualIndex];
+    const city2 = cities[actualIndex + 1];
 
     const newButtons: ActionButton[] = [
       {
-        label: getLocationById(loc1)?.label || "",
+        label: getLocationById(city1)?.label || "",
         onPress: async () => {
-          const locationSelected = await prologService.moveToLocation(loc1);
-          if (locationSelected) {
+          const citySelected = await prologService.moveToCity(city1);
+          if (citySelected) {
             const route = await prologService.getInRouteLocation();
             setPlayerLocation(route);
           } else {
@@ -150,10 +164,10 @@ export default function MapScreen() {
         },
       },
       {
-        label: getLocationById(loc2)?.label || "",
+        label: getLocationById(city2)?.label || "",
         onPress: async () => {
-          const locationSelected = await prologService.moveToLocation(loc2);
-          if (locationSelected) {
+          const citySelected = await prologService.moveToCity(city2);
+          if (citySelected) {
             const route = await prologService.getInRouteLocation();
             setPlayerLocation(route);
           } else {
@@ -172,9 +186,9 @@ export default function MapScreen() {
         onPress: () => goMain(),
       },
       {
-        label: locations.length > 2 ? "Ver más →" : "",
+        label: cities.length > 2 ? "Ver más →" : "",
         onPress: () => {
-          if (locations.length > 2) {
+          if (cities.length > 2) {
             handleMover(nextIndex);
           }
         },
@@ -190,7 +204,7 @@ export default function MapScreen() {
     setPokemons(pokemonsFetched);
     setPokemonViewOpen(true);
 
-    setMessage("Pokémon en tu equipo:");
+    setMessage("Pokémon");
 
     const newButtons: ActionButton[] = [
       {
@@ -220,7 +234,7 @@ export default function MapScreen() {
   async function handleMochila() {
     const backpack = await prologService.getBackpackContent();
 
-    setMessage("Contenido de la mochila\n\nDinero: $ " + backpack.money);
+    setMessage("Mochila\n\nDinero: $ " + backpack.money);
 
     const newButtons: ActionButton[] = [
       {
@@ -270,8 +284,226 @@ export default function MapScreen() {
     setButtons(newButtons);
   }
 
-  async function handleMenu() {
-    console.log("handle menu");
+  async function handleActions(startIndex = 0) {
+    setMessage("Acciones");
+
+    const locations = (await prologService.getLocationsInCity()).filter(
+      (l) => l !== playerLocation.place,
+    );
+
+    const nextIndex = startIndex === 0 ? 2 : 0;
+
+    const newButtons: ActionButton[] = [
+      {
+        label: locations[startIndex] ? "Ir a " + locations[startIndex] : "",
+        onPress: async () => {
+          const locationSelected = await prologService.moveToLocationInCity(
+            locations[startIndex],
+          );
+          if (locationSelected) {
+            const location = await prologService.getCurrentLocation();
+            setPlayerLocation(location);
+            goMain();
+          }
+        },
+      },
+      {
+        label: locations[startIndex + 1]
+          ? "Ir a " + locations[startIndex + 1]
+          : "",
+        onPress: async () => {
+          const locationSelected = await prologService.moveToLocationInCity(
+            locations[startIndex + 1],
+          );
+          if (locationSelected) {
+            const location = await prologService.getCurrentLocation();
+            setPlayerLocation(location);
+            goMain();
+          }
+        },
+      },
+      {
+        label: "← Volver",
+        onPress: () => goMain(),
+      },
+      {
+        label: locations.length > 2 ? "Ver más →" : "",
+        onPress: () => {
+          if (locations.length > 2) handleActions(nextIndex);
+        },
+      },
+    ];
+
+    setButtons(newButtons);
+  }
+
+  async function handleComprar() {
+    const pokeballs = await prologService.getPokeballs();
+    const backpack = await prologService.getBackpackContent();
+
+    setMessage("Comprar\n\nDinero: $ " + backpack.money);
+
+    const newButtons: ActionButton[] = [
+      {
+        iconLabel: (
+          <Image
+            source={pokeballSprites[pokeballs[0].name]}
+            style={scaleImage(24, 24)}
+          />
+        ),
+        label: pokeballs[0].name === "normal" ? " Pokebolas" : "",
+        onPress: async () => handleGrabPokeballs(pokeballs[0], 0),
+      },
+      {
+        iconLabel: (
+          <Image
+            source={pokeballSprites[pokeballs[1].name]}
+            style={scaleImage(22, 22)}
+          />
+        ),
+        label: pokeballs[1].name === "superball" ? " Superbolas" : "",
+        onPress: async () => handleGrabPokeballs(pokeballs[1], 0),
+      },
+      {
+        label: "← Volver",
+        onPress: () => goMain(),
+      },
+      { label: "", onPress: () => console.log() },
+    ];
+
+    setButtons(newButtons);
+  }
+
+  function handleGrabPokeballs(ball: Pokeball, cant: number) {
+    setMessage(
+      "Pokebolas a comprar: " + cant + "\n\nCosto total: $" + cant * ball.cost,
+    );
+
+    setButtons([
+      {
+        iconLabel: (
+          <Image
+            source={pokeballSprites[ball.name]}
+            style={
+              pokeballSprites[ball.name] === "normal"
+                ? scaleImage(24, 24)
+                : scaleImage(22, 22)
+            }
+          />
+        ),
+        label: " - 1 ",
+        onPress: () => handleGrabPokeballs(ball, Math.max(0, cant - 1)),
+      },
+      {
+        iconLabel: (
+          <Image
+            source={pokeballSprites[ball.name]}
+            style={
+              pokeballSprites[ball.name] === "normal"
+                ? scaleImage(24, 24)
+                : scaleImage(22, 22)
+            }
+          />
+        ),
+        label: " + 1 ",
+        onPress: () => handleGrabPokeballs(ball, Math.max(0, cant + 1)),
+      },
+      {
+        label: "← Volver",
+        onPress: () => handleComprar(),
+      },
+      { label: "Comprar", onPress: () => handlePay(ball, cant) },
+    ]);
+  }
+
+  async function handlePay(ball: Pokeball, cant: number) {
+    const backpack = await prologService.getBackpackContent();
+
+    if (backpack.money < ball.cost * cant) {
+      setMessage("Dinero insuficiente :(");
+
+      const newButtons: ActionButton[] = [
+        {
+          label: "← Volver",
+          onPress: () => handleGrabPokeballs(ball, cant),
+        },
+        {
+          label: "",
+          onPress: () => console.log(),
+        },
+        {
+          label: "",
+          onPress: () => console.log(),
+        },
+        {
+          label: "",
+          onPress: () => console.log(),
+        },
+      ];
+
+      setButtons(newButtons);
+    } else {
+      const ticket = await prologService.buyPokeball(ball.name, cant);
+
+      if (ticket[0]) {
+        setMessage("Bolas agregadas a tu inventario\n\nMuchas gracias :)");
+
+        const newButtons: ActionButton[] = [
+          {
+            label: "← Volver",
+            onPress: () => handleComprar(),
+          },
+          {
+            label: "",
+            onPress: () => console.log(),
+          },
+          {
+            label: "",
+            onPress: () => console.log(),
+          },
+          {
+            label: "",
+            onPress: () => console.log(),
+          },
+        ];
+
+        setButtons(newButtons);
+      } else {
+        setMessage(
+          "Error al procesar la compra, una disculpa\n\nAgregadas correctamente: " +
+            (cant - ticket[1]),
+        );
+
+        const newButtons: ActionButton[] = [
+          {
+            label: "← Volver",
+            onPress: () => handleComprar(),
+          },
+          {
+            label: "",
+            onPress: () => console.log(),
+          },
+          {
+            label: "",
+            onPress: () => console.log(),
+          },
+          {
+            label: "",
+            onPress: () => console.log(),
+          },
+        ];
+
+        setButtons(newButtons);
+      }
+    }
+  }
+
+  function handleCurar() {
+    console.log("handle curar");
+  }
+
+  function handleGimnasio() {
+    console.log("handle gimnasio");
   }
 
   async function handleEvent() {
