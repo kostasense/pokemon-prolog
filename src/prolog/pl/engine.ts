@@ -825,7 +825,7 @@ export const engine = `
         retract(trainer(R, T, M, P, _)),
         asserta(trainer(R, T, M, P, yes)),
         allowTravel,
-        endBattle.
+        exitBattle.
 
     endBattle:-
         winner(_, pokemon),
