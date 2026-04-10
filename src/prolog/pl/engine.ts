@@ -894,7 +894,8 @@ export const engine = `
     saveExp:-
         gainedExp(Gained),
         gymExp(Record),
-        add(Gained, Record, S),
+        activePokemon(Tag),
+        addPair(Tag, Gained, Record, S),
         retract(gymExp(_)),
         retract(gymExp(S)).
 
