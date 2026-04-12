@@ -2,7 +2,8 @@ export const engine = `
     % ==== HELPERS ====
     %!  addPair(+Key, +Value, +Pairs, -New)
     %   returns new list with element added
-    addPair(K, V, Pairs, [K-V | Pairs]).
+    addPair(K, V, [], [K-V]).
+    addPair(K, V, [H | T], [H | R]):- addPair(K, V, T, R).
 
     %!  add(+Value, +List, -New)
     %   returns new list with element added
@@ -241,8 +242,8 @@ export const engine = `
         retractall(location(_, _)),
         asserta(location(City, Location)).
 
-    %!  growEgg(+Route, +List)
-    %   updates all eggs in list based on distance of given rute
+    %!  growEgg(+Route, +Team)
+    %   updates all eggs in team based on distance of given rute
     growEgg(_, []).
 
     growEgg(Route, [Tag-egg | T]):-
@@ -256,7 +257,7 @@ export const engine = `
 
     growEgg(Route, [_-_ | T]):- growEgg(Route, T).
 
-    %!  checkEgg(+List, -List)
+    %!  checkEgg(+Team, -List)
     %   returns list with eggs ready to hatch
     checkEgg([], []).
     checkEgg([Tag-egg | T], [Tag | R]):- playerEggs(Tag, _, 0), checkEgg(T, R).
