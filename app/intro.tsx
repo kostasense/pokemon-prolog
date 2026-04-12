@@ -84,10 +84,10 @@ export default function IntroScreen() {
     ActionButton,
   ] {
     return [
-      { label: "", onPress: () => console.log() },
+      { label: "", onPress: () => {} },
       { label: "Siguiente →", onPress: () => handleNext(1) },
-      { label: "", onPress: () => console.log() },
-      { label: "", onPress: () => console.log() },
+      { label: "", onPress: () => {} },
+      { label: "", onPress: () => {} },
     ];
   }
 
@@ -98,10 +98,10 @@ export default function IntroScreen() {
         {
           setMessage("Empezaremos seleccionando tu Pokémon inicial.");
           setButtons([
-            { label: "", onPress: () => console.log() },
+            { label: "", onPress: () => {} },
             { label: "Siguiente →", onPress: () => handleNext(2) },
-            { label: "", onPress: () => console.log() },
-            { label: "", onPress: () => console.log() },
+            { label: "", onPress: () => {} },
+            { label: "", onPress: () => {} },
           ]);
         }
         break;
@@ -133,7 +133,7 @@ export default function IntroScreen() {
                 handleNext(3, starters[2]);
               },
             },
-            { label: "", onPress: () => console.log() },
+            { label: "", onPress: () => {} },
           ]);
         }
         break;
@@ -152,10 +152,10 @@ export default function IntroScreen() {
                 } else {
                   setMessage("Error al elegir el inicial. Intenta de nuevo.");
                   setButtons([
-                    { label: "", onPress: () => console.log() },
+                    { label: "", onPress: () => {} },
                     { label: "Siguiente →", onPress: () => handleNext(2) },
-                    { label: "", onPress: () => console.log() },
-                    { label: "", onPress: () => console.log() },
+                    { label: "", onPress: () => {} },
+                    { label: "", onPress: () => {} },
                   ]);
                 }
               },
@@ -167,8 +167,8 @@ export default function IntroScreen() {
                 handleNext(2);
               },
             },
-            { label: "", onPress: () => console.log() },
-            { label: "", onPress: () => console.log() },
+            { label: "", onPress: () => {} },
+            { label: "", onPress: () => {} },
           ]);
         }
         break;
@@ -177,10 +177,10 @@ export default function IntroScreen() {
         {
           setMessage("Buena suerte.");
           setButtons([
-            { label: "", onPress: () => console.log() },
+            { label: "", onPress: () => {} },
             { label: "Siguiente →", onPress: () => router.push("/map" as any) },
-            { label: "", onPress: () => console.log() },
-            { label: "", onPress: () => console.log() },
+            { label: "", onPress: () => {} },
+            { label: "", onPress: () => {} },
           ]);
         }
         break;

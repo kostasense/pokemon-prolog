@@ -41,6 +41,8 @@ export class PrologService {
       if (name === "egg") {
         const result = await query(`playerEggs(${tag}, Pokemon, DistanceLeft)`);
 
+        console.log(result);
+
         const webo: Egg = {
           tag: tag,
           pokemon: result[0].Pokemon.toUpperCase(),
@@ -167,6 +169,52 @@ export class PrologService {
     }
     return true;
   }
+
+  async generateEvent(): Promise<string> {
+    const results = await query("event(Type)");
+    const event = results[0].Type;
+
+    return event;
+  }
+
+  async getEventDetails(type: string): Promise<string> {
+    const results = await query(`handleEvent(${type}, Details)`);
+    const details = results[0].Details;
+
+    return details;
+  }
+
+  async pickupPokeball(type: string): Promise<boolean> {
+    const results = await prove(`pickUpItem(pokeball, ${type}, backpack)`);
+    return results;
+  }
+
+  async pickupEgg(type: string): Promise<[boolean, string]> {
+    const results = await prove(`pickUpItem(egg, ${type}, backpack)`);
+    if (results) {
+      return [results, "mochila"];
+    }
+
+    const results2 = await prove(`pickUpItem(egg, ${type}, computer)`);
+    return [results2, "PC"];
+  }
+
+  async startBattle(type: string): Promise<boolean> {
+    const results = prove(`handleEvent(${type}, _)`);
+    return results;
+  }
+
+  async challengeLeader(): Promise<boolean> {
+    const results = prove(`challenge`);
+    return results;
+  }
+
+  async finishRouteTravel(): Promise<boolean> {
+    const results = await prove("allowTravel");
+    return results;
+  }
+
+  async growEgg(tag: number) {}
 }
 
 export const prologService = new PrologService();

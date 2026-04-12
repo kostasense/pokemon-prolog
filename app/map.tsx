@@ -121,10 +121,10 @@ export default function MapScreen() {
 
   function getRouteButtons(): ActionButton[] {
     return [
-      { label: "", onPress: () => console.log() },
+      { label: "", onPress: () => {} },
       { label: "Siguiente →", onPress: () => handleEvent() },
-      { label: "", onPress: () => console.log() },
-      { label: "", onPress: () => console.log() },
+      { label: "", onPress: () => {} },
+      { label: "", onPress: () => {} },
     ];
   }
 
@@ -155,10 +155,10 @@ export default function MapScreen() {
           } else {
             setMessage("Error al elegir ubicación. Intenta de nuevo.");
             setButtons([
-              { label: "", onPress: () => console.log() },
+              { label: "", onPress: () => {} },
               { label: "Siguiente →", onPress: () => handleMover() },
-              { label: "", onPress: () => console.log() },
-              { label: "", onPress: () => console.log() },
+              { label: "", onPress: () => {} },
+              { label: "", onPress: () => {} },
             ]);
           }
         },
@@ -173,10 +173,10 @@ export default function MapScreen() {
           } else {
             setMessage("Error al elegir ubicación. Intenta de nuevo.");
             setButtons([
-              { label: "", onPress: () => console.log() },
+              { label: "", onPress: () => {} },
               { label: "Siguiente →", onPress: () => handleMover() },
-              { label: "", onPress: () => console.log() },
-              { label: "", onPress: () => console.log() },
+              { label: "", onPress: () => {} },
+              { label: "", onPress: () => {} },
             ]);
           }
         },
@@ -216,15 +216,15 @@ export default function MapScreen() {
       },
       {
         label: "",
-        onPress: () => console.log(),
+        onPress: () => {},
       },
       {
         label: "",
-        onPress: () => console.log(),
+        onPress: () => {},
       },
       {
         label: "",
-        onPress: () => console.log(),
+        onPress: () => {},
       },
     ];
 
@@ -251,7 +251,7 @@ export default function MapScreen() {
               ),
               label:
                 " x " + backpack.pokeballs.filter((p) => p === "normal").length,
-              onPress: () => console.log(),
+              onPress: () => {},
             },
             {
               iconLabel: (
@@ -263,13 +263,13 @@ export default function MapScreen() {
               label:
                 " x " +
                 backpack.pokeballs.filter((p) => p === "superball").length,
-              onPress: () => console.log(),
+              onPress: () => {},
             },
             {
               label: "← Volver",
               onPress: () => handleMochila(),
             },
-            { label: "", onPress: () => console.log() },
+            { label: "", onPress: () => {} },
           ]);
         },
       },
@@ -284,7 +284,7 @@ export default function MapScreen() {
         label: "← Volver",
         onPress: () => goMain(),
       },
-      { label: "", onPress: () => console.log() },
+      { label: "", onPress: () => {} },
     ];
 
     setButtons(newButtons);
@@ -419,7 +419,7 @@ export default function MapScreen() {
         label: "← Volver",
         onPress: () => goMain(),
       },
-      { label: "", onPress: () => console.log() },
+      { label: "", onPress: () => {} },
     ];
 
     setButtons(newButtons);
@@ -480,15 +480,15 @@ export default function MapScreen() {
         },
         {
           label: "",
-          onPress: () => console.log(),
+          onPress: () => {},
         },
         {
           label: "",
-          onPress: () => console.log(),
+          onPress: () => {},
         },
         {
           label: "",
-          onPress: () => console.log(),
+          onPress: () => {},
         },
       ];
 
@@ -506,15 +506,15 @@ export default function MapScreen() {
           },
           {
             label: "",
-            onPress: () => console.log(),
+            onPress: () => {},
           },
           {
             label: "",
-            onPress: () => console.log(),
+            onPress: () => {},
           },
           {
             label: "",
-            onPress: () => console.log(),
+            onPress: () => {},
           },
         ];
 
@@ -532,15 +532,15 @@ export default function MapScreen() {
           },
           {
             label: "",
-            onPress: () => console.log(),
+            onPress: () => {},
           },
           {
             label: "",
-            onPress: () => console.log(),
+            onPress: () => {},
           },
           {
             label: "",
-            onPress: () => console.log(),
+            onPress: () => {},
           },
         ];
 
@@ -574,15 +574,15 @@ export default function MapScreen() {
               },
               {
                 label: "",
-                onPress: () => console.log(),
+                onPress: () => {},
               },
               {
                 label: "",
-                onPress: () => console.log(),
+                onPress: () => {},
               },
               {
                 label: "",
-                onPress: () => console.log(),
+                onPress: () => {},
               },
             ];
 
@@ -592,7 +592,7 @@ export default function MapScreen() {
       },
       {
         label: "",
-        onPress: () => console.log(),
+        onPress: () => {},
       },
       {
         label: "← Volver",
@@ -601,18 +601,333 @@ export default function MapScreen() {
           goMain();
         },
       },
-      { label: "", onPress: () => console.log() },
+      { label: "", onPress: () => {} },
     ];
 
     setButtons(newButtons);
   }
 
-  function handleGimnasio() {
-    console.log("handle gimnasio");
+  async function handleGimnasio() {
+    setMessage(
+      "Estas desafiando al lider de gimnasio\n\nde " +
+        getLocationById(playerLocation.main)?.label,
+    );
+
+    const newButtons: ActionButton[] = [
+      {
+        label: "Combatir",
+        onPress: async () => {
+          const isChallengeEffective = await prologService.challengeLeader();
+
+          if (isChallengeEffective) {
+            console.log(isChallengeEffective);
+          } else {
+            setMessage("Error al continuar con el reto :(");
+            setButtons([
+              { label: "", onPress: () => {} },
+              { label: "Reintentar →", onPress: () => goMain() },
+              { label: "", onPress: () => {} },
+              { label: "", onPress: () => {} },
+            ]);
+          }
+        },
+      },
+      {
+        label: "Cancelar",
+        onPress: () => goMain(),
+      },
+      { label: "", onPress: () => {} },
+      { label: "", onPress: () => {} },
+    ];
+
+    setButtons(newButtons);
   }
 
   async function handleEvent() {
-    console.log("handle event");
+    const eventType = await prologService.generateEvent();
+    console.log(eventType);
+
+    switch (eventType) {
+      case "pokeball":
+        {
+          const eventResult = await prologService.getEventDetails(eventType);
+
+          setMessage(
+            "¡Has encontrado una " +
+              (eventResult === "normal" ? "Pokebola!" : "Superbola!"),
+          );
+
+          const newButtons: ActionButton[] = [
+            {
+              label: "Recoger",
+              onPress: async () => {
+                const ballPickedUp =
+                  await prologService.pickupPokeball(eventResult);
+
+                if (ballPickedUp) {
+                  setMessage("Bola agregada a tu inventario");
+
+                  const newButtons: ActionButton[] = [
+                    { label: "", onPress: () => {} },
+                    {
+                      label: "Siguiente →",
+                      onPress: async () => {
+                        const isTravelFinished =
+                          await prologService.finishRouteTravel();
+
+                        if (isTravelFinished) {
+                          const location =
+                            await prologService.getCurrentLocation();
+                          setPlayerLocation(location);
+                          goMain();
+                        } else {
+                          setMessage("Error al continuar con el viaje :(");
+                          setButtons([
+                            { label: "", onPress: () => {} },
+                            { label: "Reintentar →", onPress: () => goMain() },
+                            { label: "", onPress: () => {} },
+                            { label: "", onPress: () => {} },
+                          ]);
+                        }
+                      },
+                    },
+                    { label: "", onPress: () => {} },
+                    { label: "", onPress: () => {} },
+                  ];
+
+                  setButtons(newButtons);
+                } else {
+                  setMessage("Error al continuar con el viaje :(");
+                  setButtons([
+                    { label: "", onPress: () => {} },
+                    { label: "Reintentar →", onPress: () => goMain() },
+                    { label: "", onPress: () => {} },
+                    { label: "", onPress: () => {} },
+                  ]);
+                }
+              },
+            },
+            {
+              label: "Ignorar",
+              onPress: async () => {
+                const isTravelFinished =
+                  await prologService.finishRouteTravel();
+
+                if (isTravelFinished) {
+                  const location = await prologService.getCurrentLocation();
+                  setPlayerLocation(location);
+                  goMain();
+                } else {
+                  setMessage("Error al continuar con el viaje :(");
+                  setButtons([
+                    { label: "", onPress: () => {} },
+                    { label: "Reintentar →", onPress: () => goMain() },
+                    { label: "", onPress: () => {} },
+                    { label: "", onPress: () => {} },
+                  ]);
+                }
+              },
+            },
+            { label: "", onPress: () => {} },
+            { label: "", onPress: () => {} },
+          ];
+
+          setButtons(newButtons);
+        }
+        break;
+
+      case "egg":
+        {
+          const eventResult = await prologService.getEventDetails(eventType);
+
+          setMessage("¡Has encontrado un huevo!");
+
+          const newButtons: ActionButton[] = [
+            {
+              label: "Recoger",
+              onPress: async () => {
+                const eggPickedUp = await prologService.pickupEgg(eventResult);
+
+                if (eggPickedUp[0]) {
+                  setMessage(
+                    "Huevo recogido\n\nAgregado a la " + eggPickedUp[1],
+                  );
+
+                  const newButtons: ActionButton[] = [
+                    { label: "", onPress: () => {} },
+                    {
+                      label: "Siguiente →",
+                      onPress: async () => {
+                        const isTravelFinshed =
+                          await prologService.finishRouteTravel();
+
+                        if (isTravelFinshed) {
+                          const location =
+                            await prologService.getCurrentLocation();
+                          setPlayerLocation(location);
+                          goMain();
+                        } else {
+                          setMessage("Error al continuar con el viaje :(");
+                          setButtons([
+                            { label: "", onPress: () => {} },
+                            { label: "Reintentar →", onPress: () => goMain() },
+                            { label: "", onPress: () => {} },
+                            { label: "", onPress: () => {} },
+                          ]);
+                        }
+                      },
+                    },
+                    { label: "", onPress: () => {} },
+                    { label: "", onPress: () => {} },
+                  ];
+
+                  setButtons(newButtons);
+                } else {
+                  setMessage("Error al continuar con el viaje :(");
+                  setButtons([
+                    { label: "", onPress: () => {} },
+                    { label: "Reintentar →", onPress: () => goMain() },
+                    { label: "", onPress: () => {} },
+                    { label: "", onPress: () => {} },
+                  ]);
+                }
+              },
+            },
+            {
+              label: "Ignorar",
+              onPress: async () => {
+                const isTravelFinished =
+                  await prologService.finishRouteTravel();
+
+                if (isTravelFinished) {
+                  const location = await prologService.getCurrentLocation();
+                  setPlayerLocation(location);
+                  goMain();
+                } else {
+                  setMessage("Error al continuar con el viaje :(");
+                  setButtons([
+                    { label: "", onPress: () => {} },
+                    { label: "Reintentar →", onPress: () => goMain() },
+                    { label: "", onPress: () => {} },
+                    { label: "", onPress: () => {} },
+                  ]);
+                }
+              },
+            },
+            { label: "", onPress: () => {} },
+            { label: "", onPress: () => {} },
+          ];
+
+          setButtons(newButtons);
+        }
+        break;
+
+      case "pokemon":
+        {
+          setMessage("¡Has encontrado un pokemon salvaje!");
+
+          const newButtons: ActionButton[] = [
+            {
+              label: "Combatir",
+              onPress: async () => {
+                const eventResult = await prologService.startBattle(eventType);
+
+                if (eventResult) {
+                  console.log(eventResult);
+                } else {
+                  setMessage("Error al continuar con el viaje :(");
+                  setButtons([
+                    { label: "", onPress: () => {} },
+                    { label: "Reintentar →", onPress: () => goMain() },
+                    { label: "", onPress: () => {} },
+                    { label: "", onPress: () => {} },
+                  ]);
+                }
+              },
+            },
+            {
+              label: "Huir",
+              onPress: async () => {
+                const isTravelFinished =
+                  await prologService.finishRouteTravel();
+
+                if (isTravelFinished) {
+                  const location = await prologService.getCurrentLocation();
+                  setPlayerLocation(location);
+                  goMain();
+                } else {
+                  setMessage("Error al continuar con el viaje :(");
+                  setButtons([
+                    { label: "", onPress: () => {} },
+                    { label: "Reintentar →", onPress: () => goMain() },
+                    { label: "", onPress: () => {} },
+                    { label: "", onPress: () => {} },
+                  ]);
+                }
+              },
+            },
+            { label: "", onPress: () => {} },
+            { label: "", onPress: () => {} },
+          ];
+
+          setButtons(newButtons);
+        }
+        break;
+
+      case "trainer":
+        {
+          setMessage(
+            "¡Has encontrado un entrenador!\n\nTe está retando a un combate",
+          );
+
+          const newButtons: ActionButton[] = [
+            {
+              label: "Aceptar",
+              onPress: async () => {
+                const eventResult = await prologService.startBattle(eventType);
+
+                if (eventResult) {
+                  console.log(eventResult);
+                } else {
+                  setMessage("Error al continuar con el viaje :(");
+                  setButtons([
+                    { label: "", onPress: () => {} },
+                    { label: "Reintentar →", onPress: () => goMain() },
+                    { label: "", onPress: () => {} },
+                    { label: "", onPress: () => {} },
+                  ]);
+                }
+              },
+            },
+            {
+              label: "Rechazar",
+              onPress: async () => {
+                const isTravelFinished =
+                  await prologService.finishRouteTravel();
+
+                if (isTravelFinished) {
+                  const location = await prologService.getCurrentLocation();
+                  setPlayerLocation(location);
+                  goMain();
+                } else {
+                  setMessage("Error al continuar con el viaje :(");
+                  setButtons([
+                    { label: "", onPress: () => {} },
+                    { label: "Reintentar →", onPress: () => goMain() },
+                    { label: "", onPress: () => {} },
+                    { label: "", onPress: () => {} },
+                  ]);
+                }
+              },
+            },
+            { label: "", onPress: () => {} },
+            { label: "", onPress: () => {} },
+          ];
+
+          setButtons(newButtons);
+        }
+        break;
+    }
   }
 
   return (

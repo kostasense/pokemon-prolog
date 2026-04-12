@@ -1,4 +1,7 @@
 export const dynamics = `
+    :- dynamic(trainer/5).
+    :- dynamic(gymLeader/4).
+
     init_game:-
         retractall(backpack(_, _, _, _)),             asserta(backpack(0, [], [], [])),
         retractall(location(_, _)),                   asserta(location(littleroot, plaza)),

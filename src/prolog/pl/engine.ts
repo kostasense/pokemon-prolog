@@ -493,13 +493,15 @@ export const engine = `
         Length < 4,
 
         generateTag(Tag),
-        asserta(playerEggs(Tag, Item)),
+        egg(Item, Distance),
+        asserta(playerEggs(Tag, Item, Distance)),
         addToTeam(Tag, egg).
 
     pickUpItem(egg, Item, computer):-
         generateTag(Tag),
+        egg(Item, Distance),
         sendToComputer(Tag, egg),
-        asserta(playerEggs(Tag, Item)).
+        asserta(playerEggs(Tag, Item, Distance)).
 
     pickUpItem(pokeball, Item, backpack):-
         backpack(A, B, Pokeballs, C),
