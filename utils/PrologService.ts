@@ -41,8 +41,6 @@ export class PrologService {
       if (name === "egg") {
         const result = await query(`playerEggs(${tag}, Pokemon, DistanceLeft)`);
 
-        console.log(result);
-
         const webo: Egg = {
           tag: tag,
           pokemon: result[0].Pokemon.toUpperCase(),
@@ -77,6 +75,8 @@ export class PrologService {
       }
     }
 
+    console.log(pokemons);
+
     return pokemons;
   }
 
@@ -98,7 +98,7 @@ export class PrologService {
   }
 
   async moveToCity(city: string): Promise<boolean> {
-    const cleanName = city.toLowerCase().trim();
+    const cleanName = city?.toLowerCase().trim();
     const results = await prove(`selectCity(${cleanName})`);
     return results;
   }
@@ -190,7 +190,7 @@ export class PrologService {
   }
 
   async pickupEgg(type: string): Promise<[boolean, string]> {
-    const results = await prove(`pickUpItem(egg, ${type}, backpack)`);
+    const results = await prove(`pickUpItem(egg, gastly, backpack)`);
     if (results) {
       return [results, "mochila"];
     }
@@ -214,7 +214,26 @@ export class PrologService {
     return results;
   }
 
-  async growEgg(tag: number) {}
+  async growEggs(route: number): Promise<boolean> {
+    const results = await prove(
+      `backpack(_, _, _, Team), growEgg(${route}, Team)`,
+    );
+    return results;
+  }
+
+  async checkEggs(): Promise<number[]> {
+    const results = await query(
+      "backpack(_, _, _, Team), checkEgg(Team, EggsReady)",
+    );
+    const eggsReady = results[0].EggsReady;
+    return eggsReady;
+  }
+
+  async hatchEgg(tag: number): Promise<boolean> {
+    console.log(tag);
+    const results = await prove(`hatchEgg(${tag})`);
+    return results;
+  }
 }
 
 export const prologService = new PrologService();

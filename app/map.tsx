@@ -9,6 +9,7 @@ import {
   View,
 } from "react-native";
 
+import EggHatchView from "@/components/EggHatchView";
 import PokemonTeam from "@/components/PokemonTeam";
 import { medalSprites, pokeballSprites } from "@/utils/sprites";
 import GameLayout, { ActionButton } from "../components/GameLayout";
@@ -32,6 +33,9 @@ export default function MapScreen() {
   const [buttons, setButtons] = useState(getMainButtons());
   const [pokemonViewOpen, setPokemonViewOpen] = useState(false);
   const [pokemons, setPokemons] = useState<(Pokemon | Egg)[]>([]);
+  const [eggReady, setEggReady] = useState(0);
+  const [eggHatchViewOpen, setEggHatchViewOpen] = useState(false);
+  const [startHatch, setStartHatch] = useState(false);
 
   const pulse = useRef(new Animated.Value(1)).current;
 
@@ -166,18 +170,20 @@ export default function MapScreen() {
       {
         label: getLocationById(city2)?.label || "",
         onPress: async () => {
-          const citySelected = await prologService.moveToCity(city2);
-          if (citySelected) {
-            const route = await prologService.getInRouteLocation();
-            setPlayerLocation(route);
-          } else {
-            setMessage("Error al elegir ubicación. Intenta de nuevo.");
-            setButtons([
-              { label: "", onPress: () => {} },
-              { label: "Siguiente →", onPress: () => handleMover() },
-              { label: "", onPress: () => {} },
-              { label: "", onPress: () => {} },
-            ]);
+          if (city2) {
+            const citySelected = await prologService.moveToCity(city2);
+            if (citySelected) {
+              const route = await prologService.getInRouteLocation();
+              setPlayerLocation(route);
+            } else {
+              setMessage("Error al elegir ubicación. Intenta de nuevo.");
+              setButtons([
+                { label: "", onPress: () => {} },
+                { label: "Siguiente →", onPress: () => handleMover() },
+                { label: "", onPress: () => {} },
+                { label: "", onPress: () => {} },
+              ]);
+            }
           }
         },
       },
@@ -676,10 +682,7 @@ export default function MapScreen() {
                           await prologService.finishRouteTravel();
 
                         if (isTravelFinished) {
-                          const location =
-                            await prologService.getCurrentLocation();
-                          setPlayerLocation(location);
-                          goMain();
+                          handleFinishEvent();
                         } else {
                           setMessage("Error al continuar con el viaje :(");
                           setButtons([
@@ -714,9 +717,7 @@ export default function MapScreen() {
                   await prologService.finishRouteTravel();
 
                 if (isTravelFinished) {
-                  const location = await prologService.getCurrentLocation();
-                  setPlayerLocation(location);
-                  goMain();
+                  handleFinishEvent();
                 } else {
                   setMessage("Error al continuar con el viaje :(");
                   setButtons([
@@ -762,10 +763,7 @@ export default function MapScreen() {
                           await prologService.finishRouteTravel();
 
                         if (isTravelFinshed) {
-                          const location =
-                            await prologService.getCurrentLocation();
-                          setPlayerLocation(location);
-                          goMain();
+                          handleFinishEvent();
                         } else {
                           setMessage("Error al continuar con el viaje :(");
                           setButtons([
@@ -800,9 +798,7 @@ export default function MapScreen() {
                   await prologService.finishRouteTravel();
 
                 if (isTravelFinished) {
-                  const location = await prologService.getCurrentLocation();
-                  setPlayerLocation(location);
-                  goMain();
+                  handleFinishEvent();
                 } else {
                   setMessage("Error al continuar con el viaje :(");
                   setButtons([
@@ -824,7 +820,7 @@ export default function MapScreen() {
 
       case "pokemon":
         {
-          setMessage("¡Has encontrado un pokemon salvaje!");
+          setMessage("¡Has encontrado un Pokémon salvaje!");
 
           const newButtons: ActionButton[] = [
             {
@@ -852,9 +848,7 @@ export default function MapScreen() {
                   await prologService.finishRouteTravel();
 
                 if (isTravelFinished) {
-                  const location = await prologService.getCurrentLocation();
-                  setPlayerLocation(location);
-                  goMain();
+                  handleFinishEvent();
                 } else {
                   setMessage("Error al continuar con el viaje :(");
                   setButtons([
@@ -906,9 +900,7 @@ export default function MapScreen() {
                   await prologService.finishRouteTravel();
 
                 if (isTravelFinished) {
-                  const location = await prologService.getCurrentLocation();
-                  setPlayerLocation(location);
-                  goMain();
+                  handleFinishEvent();
                 } else {
                   setMessage("Error al continuar con el viaje :(");
                   setButtons([
@@ -927,6 +919,121 @@ export default function MapScreen() {
           setButtons(newButtons);
         }
         break;
+    }
+  }
+
+  async function handleFinishEvent(tagNotProcessing?: number) {
+    const updatedPokemons = await prologService.getTeamPokemons();
+    setPokemons(updatedPokemons);
+
+    prologService.growEggs(Number(playerLocation.main));
+    const eggsReady = await prologService.checkEggs();
+
+    if (eggsReady.length > 0) {
+      setEggReady(eggsReady[0]);
+      setEggHatchViewOpen(true);
+
+      setMessage("¡Un huevo está por eclosionar!");
+
+      const newButtons: ActionButton[] = [
+        {
+          label: "",
+          onPress: () => {},
+        },
+        {
+          label: "Siguiente →",
+          onPress: async () => {
+            const emptyButtons: ActionButton[] = [
+              { label: "", onPress: () => {} },
+              { label: "", onPress: () => {} },
+              { label: "", onPress: () => {} },
+              { label: "", onPress: () => {} },
+            ];
+
+            setButtons(emptyButtons);
+
+            const eggHatched = await prologService.hatchEgg(eggsReady[0]);
+
+            if (eggHatched) {
+              const updatedPokemons = await prologService.getTeamPokemons();
+              setPokemons(updatedPokemons);
+
+              const hatchedName =
+                updatedPokemons.find((p) => p.tag === eggsReady[0])?.pokemon ??
+                "Pokémon";
+
+              setStartHatch(true);
+              setTimeout(async () => {
+                setMessage(`¡Tu huevo ha eclosionado en un ${hatchedName}!`);
+
+                const buttons: ActionButton[] = [
+                  { label: "", onPress: () => {} },
+                  {
+                    label: "Siguiente →",
+                    onPress: async () => {
+                      setMessage(
+                        `Tu ${hatchedName} ha sido agregado a la mochila`,
+                      );
+
+                      const buttons: ActionButton[] = [
+                        { label: "", onPress: () => {} },
+                        {
+                          label: "Siguiente →",
+                          onPress: () => {
+                            setStartHatch(false);
+                            setEggReady(0);
+                            setEggHatchViewOpen(false);
+                            handleFinishEvent();
+                          },
+                        },
+                        { label: "", onPress: () => {} },
+                        { label: "", onPress: () => {} },
+                      ];
+
+                      setButtons(buttons);
+                    },
+                  },
+                  { label: "", onPress: () => {} },
+                  { label: "", onPress: () => {} },
+                ];
+                setButtons(buttons);
+              }, 6000);
+            } else {
+              setMessage("Error al eclosionar el huevo :(");
+
+              const buttons: ActionButton[] = [
+                { label: "", onPress: () => {} },
+                {
+                  label: "Siguiente →",
+                  onPress: async () => {
+                    setStartHatch(false);
+                    setEggReady(0);
+                    setEggHatchViewOpen(false);
+                    handleFinishEvent();
+                  },
+                },
+                { label: "", onPress: () => {} },
+                { label: "", onPress: () => {} },
+              ];
+              setButtons(buttons);
+            }
+          },
+        },
+        {
+          label: "",
+          onPress: () => {},
+        },
+        {
+          label: "",
+          onPress: () => {},
+        },
+      ];
+
+      setButtons(newButtons);
+    } else {
+      const location = await prologService.getCurrentLocation();
+      setPlayerLocation(location);
+      goMain();
     }
   }
 
@@ -962,6 +1069,12 @@ export default function MapScreen() {
           </View>
         </ScrollView>
         {pokemonViewOpen && <PokemonTeam pokemons={pokemons} />}
+        {eggHatchViewOpen && (
+          <EggHatchView
+            egg={pokemons.find((p) => p.tag === eggReady) as Egg}
+            start={startHatch}
+          />
+        )}
       </View>
     </GameLayout>
   );
