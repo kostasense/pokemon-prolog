@@ -16,6 +16,8 @@ import {
 
 const { width: SCREEN_W } = Dimensions.get("window");
 
+const FINAL_W = SCREEN_W > 650 ? 650 : SCREEN_W;
+
 export type ActionButton = {
   iconLabel?: React.ReactNode;
   label: string;
@@ -80,6 +82,8 @@ const styles = StyleSheet.create({
   root: {
     flex: 1,
     backgroundColor: "#000",
+    justifyContent: "center",
+    alignItems: "center",
   },
 
   scene: {
@@ -89,7 +93,7 @@ const styles = StyleSheet.create({
   },
 
   messageBg: {
-    width: SCREEN_W,
+    width: FINAL_W,
     height: MSG_HEIGHT,
     justifyContent: "center",
   },
@@ -104,7 +108,7 @@ const styles = StyleSheet.create({
   buttonGrid: {
     flexDirection: "row",
     flexWrap: "wrap",
-    width: SCREEN_W,
+    width: FINAL_W,
     height: BTN_HEIGHT,
   },
   buttonWrapper: {
@@ -117,7 +121,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
     height: BTN_HEIGHT / 2,
-    width: SCREEN_W / 2,
+    width: FINAL_W / 2,
   },
   buttonText: {
     fontFamily: "GameFont",

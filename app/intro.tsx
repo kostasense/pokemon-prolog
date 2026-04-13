@@ -200,7 +200,7 @@ export default function IntroScreen() {
           <View style={styles.spriteBox}>
             <Image
               source={require("../assets/message.png")}
-              style={scaleImage(SCREEN_W / 2, 120)}
+              style={scaleImage(FINAL_W / 2, 120)}
               resizeMode="stretch"
             />
             <Image
@@ -223,6 +223,8 @@ export default function IntroScreen() {
 }
 
 const { width: SCREEN_W } = Dimensions.get("window");
+
+const FINAL_W = SCREEN_W > 650 ? 650 : SCREEN_W;
 
 const styles = StyleSheet.create({
   confirmContainer: {
