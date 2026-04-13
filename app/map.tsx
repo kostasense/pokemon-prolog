@@ -12,6 +12,7 @@ import {
 import EggHatchView from "@/components/EggHatchView";
 import PokemonTeam from "@/components/PokemonTeam";
 import { medalSprites, pokeballSprites } from "@/utils/sprites";
+import { router } from "expo-router";
 import GameLayout, { ActionButton } from "../components/GameLayout";
 import { getLocationById } from "../constants/mapLocations";
 import { scaleImage } from "../utils/helpers";
@@ -651,7 +652,6 @@ export default function MapScreen() {
 
   async function handleEvent() {
     const eventType = await prologService.generateEvent();
-    console.log(eventType);
 
     switch (eventType) {
       case "pokeball":
@@ -829,7 +829,10 @@ export default function MapScreen() {
                 const eventResult = await prologService.startBattle(eventType);
 
                 if (eventResult) {
-                  console.log(eventResult);
+                  router.push({
+                    pathname: "/battle",
+                    params: { eventType: eventType, gym: "false", fights: "1" },
+                  });
                 } else {
                   setMessage("Error al continuar con el viaje :(");
                   setButtons([
@@ -881,7 +884,10 @@ export default function MapScreen() {
                 const eventResult = await prologService.startBattle(eventType);
 
                 if (eventResult) {
-                  console.log(eventResult);
+                  router.push({
+                    pathname: "/battle",
+                    params: { eventType: eventType, gym: "false", fights: "1" },
+                  });
                 } else {
                   setMessage("Error al continuar con el viaje :(");
                   setButtons([
@@ -922,7 +928,7 @@ export default function MapScreen() {
     }
   }
 
-  async function handleFinishEvent(tagNotProcessing?: number) {
+  async function handleFinishEvent() {
     const updatedPokemons = await prologService.getTeamPokemons();
     setPokemons(updatedPokemons);
 

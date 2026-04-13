@@ -21,6 +21,16 @@ export interface Pokemon {
   moves: string[];
 }
 
+export interface FoePokemon {
+  pokemon: string;
+  state: string;
+  level: number;
+  atk: number;
+  currentHp: number;
+  maxHp: number;
+  moves: string[];
+}
+
 export interface Egg {
   tag: number;
   pokemon: string;

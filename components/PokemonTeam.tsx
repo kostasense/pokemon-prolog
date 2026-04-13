@@ -16,8 +16,10 @@ const IMG_H = CARD_H * 0.85;
 
 export default function PokemonTeam({
   pokemons,
+  onSelect,
 }: {
   pokemons: (Pokemon | Egg | null)[];
+  onSelect?: (tag: number) => void;
 }) {
   const [selected, setSelected] = useState<number | null>(null);
 
@@ -27,7 +29,11 @@ export default function PokemonTeam({
         {Array.from({ length: 6 }, (_, i) => (
           <View key={i} style={styles.cardWrapper}>
             <TouchableOpacity
-              onPress={() => setSelected(i)}
+              onPress={() => {
+                setSelected(i);
+                const p = pokemons[i];
+                if (p) onSelect?.(p.tag);
+              }}
               activeOpacity={0.75}
               style={styles.touchable}
             >

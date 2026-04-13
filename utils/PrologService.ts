@@ -1,6 +1,13 @@
 import { prologEngine } from "../src/prolog/PrologEngine";
 import { isEgg } from "./helpers";
-import { Backpack, Egg, Location, Pokeball, Pokemon } from "./interfaces";
+import {
+  Backpack,
+  Egg,
+  FoePokemon,
+  Location,
+  Pokeball,
+  Pokemon,
+} from "./interfaces";
 
 const query = (goal: string) => prologEngine.queryAll(goal, false);
 const queryAll = (goal: string) => prologEngine.queryAll(goal, true);
@@ -200,8 +207,8 @@ export class PrologService {
   }
 
   async startBattle(type: string): Promise<boolean> {
-    const results = prove(`handleEvent(${type}, _)`);
-    return results;
+    const results = await query(`handleEvent(${type}, _), inBattle(Battle)`);
+    return results[0].Battle === "yes";
   }
 
   async challengeLeader(): Promise<boolean> {
@@ -230,9 +237,122 @@ export class PrologService {
   }
 
   async hatchEgg(tag: number): Promise<boolean> {
-    console.log(tag);
     const results = await prove(`hatchEgg(${tag})`);
     return results;
+  }
+
+  async getEnemyPokemon(): Promise<FoePokemon> {
+    const result = await query(
+      "enemy(Pokemon, State, Level, Atk, CurrentHP, MaxHP, Moves)",
+    );
+
+    const foePokemon: FoePokemon = {
+      pokemon: result[0].Pokemon.toUpperCase(),
+      state: result[0].State.toUpperCase(),
+      level: result[0].Level,
+      atk: result[0].Atk,
+      currentHp: result[0].CurrentHP,
+      maxHp: result[0].MaxHP,
+      moves: result[0].Moves,
+    };
+
+    return foePokemon;
+  }
+
+  async getGymLeader(): Promise<string> {
+    const result = await query(
+      "location(Main, Place), gymnasium(Main, Leader, Fights, Badge)",
+    );
+    return result[0].Leader.toUpperCase();
+  }
+
+  async getInRouteTrainer(): Promise<string> {
+    const route = await this.getInRouteLocation();
+
+    const result = await query(
+      `trainer(${route.main}, Trainer, Money, Pokemon, Defeated)`,
+    );
+    return result[0].Trainer.toUpperCase();
+  }
+
+  async choosePokemon(tag: number): Promise<boolean> {
+    const result = prove(`choosePokemon(${tag})`);
+    return result;
+  }
+
+  async getActivePokemon(): Promise<Pokemon> {
+    const result = await query("activePokemon(Tag)");
+    const tag = result[0].Tag;
+
+    const pokemons = await this.getTeamPokemons();
+
+    const activePokemon = pokemons.find((p) => p.tag === tag) as Pokemon;
+
+    return activePokemon;
+  }
+
+  async hitEnemyWithMove(move: string): Promise<boolean> {
+    const select = await prove(`selectMove("${move}")`);
+
+    let result = false;
+
+    if (select) {
+      result = await prove("hitEnemy");
+      console.log(result);
+    }
+
+    return result;
+  }
+
+  async hitPlayerWithMove(): Promise<string> {
+    const result = await query("enemyMove(Move), hitPlayer");
+    const moveUsed = result[0].Move;
+    return moveUsed;
+  }
+
+  async checkIfWinner(round: number): Promise<boolean> {
+    const result = await prove(`checkWinner(${round})`);
+    return result;
+  }
+
+  async getWinner(): Promise<string> {
+    const result = await query("winner(Result, Type)");
+    return result[0].Result;
+  }
+
+  async getGainedExp(): Promise<number> {
+    const result = await query("gainedExp(Exp)");
+    return result[0].Exp;
+  }
+
+  async getGymGainedExp(): Promise<{ tag: number; exp: number }[]> {
+    const result = await query("gymExp(Pairs)");
+    const pairs = result[0].Pairs;
+
+    return pairs.map((pair: any) => ({
+      tag: pair.args[0],
+      exp: pair.args[1],
+    }));
+  }
+
+  async getGainedMoney(): Promise<number> {
+    const result = await query("gainedMoney(Money)");
+    return result[0].Money;
+  }
+
+  async getGainedBadge(leader: string): Promise<string> {
+    const result = await query(`gymnasium(City, ${leader}, Fights, Badge)`);
+    return result[0].Badge;
+  }
+
+  async checkIfTeamNuked(): Promise<boolean> {
+    const result = await prove("backpack(_, _, _, Team), isTeamNuked(Team)");
+    return result;
+  }
+
+  async endBattle(): Promise<boolean> {
+    const result = await prove("endBattle");
+    return result;
   }
 }
 
