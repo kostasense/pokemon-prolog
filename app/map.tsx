@@ -673,10 +673,10 @@ export default function MapScreen() {
               },
             });
           } else {
-            setMessage("Error al continuar con el reto :(");
+            setMessage("Este gimnasio ya ha sido derrotado");
             setButtons([
               { label: "", onPress: () => {} },
-              { label: "Reintentar →", onPress: () => goMain() },
+              { label: "Siguiente →", onPress: () => goMain() },
               { label: "", onPress: () => {} },
               { label: "", onPress: () => {} },
             ]);

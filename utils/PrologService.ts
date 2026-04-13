@@ -369,9 +369,10 @@ export class PrologService {
     return result;
   }
 
-  async levelUpActivePokemon(): Promise<boolean> {
-    const result = await prove("levelUp");
-    return result;
+  async levelUpActivePokemon(): Promise<number> {
+    const result = await query("levelUp(0, Levels)");
+    const levels = result[0].Levels;
+    return levels;
   }
 }
 

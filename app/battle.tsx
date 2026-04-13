@@ -397,7 +397,7 @@ export default function BattleScreen() {
               onPress: async () => {
                 const pokemonLeveledUp =
                   await prologService.levelUpActivePokemon();
-                if (pokemonLeveledUp) {
+                if (pokemonLeveledUp > 0) {
                   const active = await prologService.getActivePokemon();
                   setMessage("¡" + active.pokemon + " ha subido de nivel!");
                   await refreshStats();
@@ -557,7 +557,7 @@ export default function BattleScreen() {
         {
           label: "Siguiente →",
           onPress: async () => {
-            if (pokemonLeveledUp) {
+            if (pokemonLeveledUp > 0) {
               const active = await prologService.getActivePokemon();
               setMessage("¡" + active.pokemon + " ha subido de nivel!");
               await refreshStats();

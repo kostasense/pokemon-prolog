@@ -362,7 +362,7 @@ export const engine = `
         addToTeam(Tag, Pokemon),
 
         % pokemon stats
-        Level = 30,
+        Level = 5,
         pokemonStats(Pokemon, Level, Atk, HP, Moves),
         allEvolutions(Pokemon, AllEvolutions),
         evolved(Pokemon, Level, AllEvolutions, Evolutions),
