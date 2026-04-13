@@ -380,14 +380,16 @@ export const engine = `
         retract(owned(Tag, _, _, _, _, _, _, _, _)),
         asserta(owned(Tag, Pokemon, healthy, Level, Atk, MaxHP, MaxHP, Exp, Moves)).
 
-    %!  levelUp
-        %   levels up <active> pokemon, will return false if current experience is less than required
-    levelUp:-
+    %!  levelUp(+N, -Levels)
+    %   returns how many levels pokemon leveled up
+    levelUp(N, L):-
         activePokemon(Tag),
         owned(Tag, Pokemon, State, Level, Atk, CurrentHP, MaxHP, Exp, Moves),
 
         nextLevel(Level, RequiredExp),
         Exp >= RequiredExp,
+
+        N1 is N + 1,
 
         % new stats
         NewLevel is Level + 1,
@@ -397,7 +399,11 @@ export const engine = `
         NewExp is Exp - RequiredExp, 
 
         retract(owned(Tag, _, _, _, _, _, _, _, _)),
-        asserta(owned(Tag, Pokemon, State, NewLevel, NewAtk, CurrentHP, NewHP, NewExp, Moves)). 
+        asserta(owned(Tag, Pokemon, State, NewLevel, NewAtk, CurrentHP, NewHP, NewExp, Moves)),
+        
+        levelUp(N1, L).
+
+    levelUp(N, N).
         
     %!  checkEvolution
     %   true if <active> pokemon wants to evolve, will return false if level is less than required or evolution has been rejected before
