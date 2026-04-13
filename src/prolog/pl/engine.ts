@@ -552,7 +552,7 @@ export const engine = `
         pokemonStats(Base, Level, Atk, HP, Moves),
         
         % assert enemy
-        retract(enemy(_, _, _, _, _, _)),
+        retract(enemy(_, _, _, _, _, _, _)),
         asserta(enemy(Pokemon, healthy, Level, Atk, HP, HP, Moves)).
 
     % ==== BATTLE LOGIC ====
@@ -587,7 +587,7 @@ export const engine = `
         
         % assert new hp
         NewHP is CurrentHP - min(Damage, CurrentHP),
-        pokemonHealth(CurrentHP, MaxHP, State),
+        pokemonHealth(NewHP, MaxHP, State),
 
         retract(enemy(_, _, _, _, _, _, _)),
         asserta(enemy(Pokemon, State, Level, EnemyAtk, NewHP, MaxHP, Moves)).
@@ -606,7 +606,7 @@ export const engine = `
         
         % assert new hp,
         NewHP is CurrentHP - min(Damage, CurrentHP),
-        pokemonHealth(CurrentHP, MaxHP, State),
+        pokemonHealth(NewHP, MaxHP, State),
 
         retract(enemy(_, _, _, _, _, _, _)),
         asserta(enemy(Pokemon, State, Level, EnemyAtk, NewHP, MaxHP, Moves)).
@@ -628,7 +628,7 @@ export const engine = `
         
         % assert new hp,
         NewHP is CurrentHP - min(Damage, CurrentHP),
-        pokemonHealth(CurrentHP, MaxHP, State),
+        pokemonHealth(NewHP, MaxHP, State),
 
         retract(owned(Tag, _, _, _, _, _, _, _, _)),
         asserta(owned(Tag, Pokemon, State, Level, Atk, NewHP, MaxHP, Exp, Moves)).
@@ -647,7 +647,7 @@ export const engine = `
         
         % assert new hp,
         NewHP is CurrentHP - min(Damage, CurrentHP),
-        pokemonHealth(CurrentHP, MaxHP, State),
+        pokemonHealth(NewHP, MaxHP, State),
 
         retract(owned(Tag, _, _, _, _, _, _, _, _)),
         asserta(owned(Tag, Pokemon, State, Level, Atk, NewHP, MaxHP, Exp, Moves)).
