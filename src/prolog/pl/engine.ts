@@ -448,15 +448,25 @@ export const engine = `
         retract(inBattle(_)),
         asserta(inBattle(yes)).
 
+
     %!  determineEncounter(+Route, +Type, -Final)
     %   if trainer in route has beed defeated, change encounter to wild pokemon
-    determineEncounter(Route, trainer, trainer):- trainer(Route, _, _, _, no).
-    determineEncounter(Route, trainer, pokemon):- trainer(Route, _, _, _, yes).
+    % determineEncounter(Route, trainer, trainer):- trainer(Route, _, _, _, no).
+    % determineEncounter(Route, trainer, pokemon):- trainer(Route, _, _, _, yes).
 
     %!  event(-Type)
     %   generates a random event
     event(Type):- 
+        inRoute(Route, _),
+        trainer(Route, _, _, _, no),
         Events = [pokemon-35, trainer-35, egg-15, pokeball-15],
+        random_between(1, 100, Roll),
+        pickEvent(Roll, Events, 0, Type).
+
+    event(Type):- 
+        inRoute(Route, _),
+        trainer(Route, _, _, _, yes),
+        Events = [pokemon-70, egg-15, pokeball-15],
         random_between(1, 100, Roll),
         pickEvent(Roll, Events, 0, Type).
 
@@ -477,8 +487,8 @@ export const engine = `
 
     handleEvent(trainer, _):-
         inRoute(Route, _),
-        determineEncounter(Route, trainer, Final),
-        encounter(Route, Final),
+        % determineEncounter(Route, trainer, Final),
+        encounter(Route, trainer),
         enterBattle.
 
     %!  handleEvent(+Type, -Item)
