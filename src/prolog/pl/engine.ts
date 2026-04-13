@@ -381,7 +381,7 @@ export const engine = `
         asserta(owned(Tag, Pokemon, healthy, Level, Atk, MaxHP, MaxHP, Exp, Moves)).
 
     %!  levelUp
-    %   levels up <active> pokemon, will return false if current experience is less than required
+        %   levels up <active> pokemon, will return false if current experience is less than required
     levelUp:-
         activePokemon(Tag),
         owned(Tag, Pokemon, State, Level, Atk, CurrentHP, MaxHP, Exp, Moves),
@@ -394,9 +394,11 @@ export const engine = `
         NewAtk is Atk + 2,
         NewHP is MaxHP + 3,
 
-        retract(owned(Tag, _, _, _, _, _, _, _, _)),
-        asserta(owned(Tag, Pokemon, State, NewLevel, NewAtk, CurrentHP, NewHP, 0, Moves)). 
+        NewExp is Exp - RequiredEXp, 
 
+        retract(owned(Tag, _, _, _, _, _, _, _, _)),
+        asserta(owned(Tag, Pokemon, State, NewLevel, NewAtk, CurrentHP, NewHP, NewExp, Moves)). 
+        
     %!  checkEvolution
     %   true if <active> pokemon wants to evolve, will return false if level is less than required or evolution has been rejected before
     checkEvolution:-
@@ -924,8 +926,10 @@ export const engine = `
     %!  isTeamNuked(+Team)
     %   returns false if player has pokemon with hp left
     isTeamNuked([]).
-    isTeamNuked([Tag-_ | R]) :-
+    isTeamNuked([Tag-_ | R]):-
         owned(Tag, _, fainted, _, _, _, _, _, _),
+        isTeamNuked(R).
+    isTeamNuked([_-egg | R]):-
         isTeamNuked(R).
 
     % ==== GAME BEATEN ====
