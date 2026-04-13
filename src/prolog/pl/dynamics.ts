@@ -12,7 +12,7 @@ export const dynamics = `
 
         retractall(nextTag(_)),                       asserta(nextTag(1)),
         retractall(owned(_, _, _, _, _, _, _, _, _)), asserta(owned(none, none, none, none, none, none, none, none, none)),
-        retractall(enemy(_, _, _, _, _, _)),          asserta(enemy(none, none, none, none, none, none)), 
+        retractall(enemy(_, _, _, _, _, _, _)),       asserta(enemy(none, none, none, none, none, none, none)), 
         retractall(ownedEvolutions(_, _)),            asserta(ownedEvolutions(none, [])),
         retractall(computer(_)),                      asserta(computer([])),
 
