@@ -21,7 +21,12 @@ export default function BadgeWonView({ badge }: { badge: string }) {
 
       <Image
         source={medalSprites[badge]}
-        style={[scaleImage(CARD_W * 0.7, CARD_H * 0.7)]}
+        style={[
+          scaleImage(CARD_W * 0.7, CARD_H * 0.7),
+          {
+            position: "absolute",
+          },
+        ]}
         resizeMode="contain"
       />
     </View>

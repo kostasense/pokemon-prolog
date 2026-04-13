@@ -198,7 +198,7 @@ export class PrologService {
   }
 
   async pickupEgg(type: string): Promise<[boolean, string]> {
-    const results = await prove(`pickUpItem(egg, gastly, backpack)`);
+    const results = await prove(`pickUpItem(egg, ${type}, backpack)`);
     if (results) {
       return [results, "mochila"];
     }
@@ -275,6 +275,13 @@ export class PrologService {
     return gym;
   }
 
+  async gainedBadge(): Promise<string> {
+    const result = await query("gainBadge(Badge)");
+    const badge = result[0].Badge;
+
+    return badge;
+  }
+
   async getInRouteTrainer(): Promise<string> {
     const route = await this.getInRouteLocation();
 
@@ -336,7 +343,10 @@ export class PrologService {
 
   async getGymGainedExp(): Promise<{ tag: number; exp: number }[]> {
     const result = await query("gymExp(Pairs)");
+    console.log(result);
     const pairs = result[0].Pairs;
+
+    console.log("Gym Gained Exp Pairs: ", pairs);
 
     return pairs.map((pair: any) => ({
       tag: pair.args[0],

@@ -20,5 +20,5 @@ export const dynamics = `
         retractall(hitWith(_)),                       asserta(hitWith(none)),
         retractall(startingHP(_)),                    asserta(startingHP(none)),
         retractall(queue(_, _)),                      asserta(queue([], none)),
-        retractall(gymExp(_, _)),                     asserta(gymExp([])).
+        retractall(gymExp(_)),                     asserta(gymExp([])).
 `;

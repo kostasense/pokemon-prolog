@@ -362,7 +362,7 @@ export const engine = `
         addToTeam(Tag, Pokemon),
 
         % pokemon stats
-        Level = 5,
+        Level = 30,
         pokemonStats(Pokemon, Level, Atk, HP, Moves),
         allEvolutions(Pokemon, AllEvolutions),
         evolved(Pokemon, Level, AllEvolutions, Evolutions),
@@ -394,7 +394,7 @@ export const engine = `
         NewAtk is Atk + 2,
         NewHP is MaxHP + 3,
 
-        NewExp is Exp - RequiredEXp, 
+        NewExp is Exp - RequiredExp, 
 
         retract(owned(Tag, _, _, _, _, _, _, _, _)),
         asserta(owned(Tag, Pokemon, State, NewLevel, NewAtk, CurrentHP, NewHP, NewExp, Moves)). 
@@ -910,11 +910,11 @@ export const engine = `
         activePokemon(Tag),
         addPair(Tag, Gained, Record, S),
         retract(gymExp(_)),
-        retract(gymExp(S)).
+        asserta(gymExp(S)).
 
     %!  gainBadge
     %   adds badge tp backpack
-    gainBadge:-
+    gainBadge(Badge):-
         location(City, _),
         gymnasium(City, _, _, Badge),
         backpack(A, Badges, B, C),

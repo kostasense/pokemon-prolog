@@ -547,7 +547,7 @@ export default function BattleScreen() {
         winner === "player"
           ? `¡Ganaste!\n\nExp: +${exp}${money ? `\nDinero: +$${money}` : ""}`
           : winner === "enemy"
-            ? `¡Perdiste!\n\n${money ? `Dinero perdido: $${-money}` : ""}`
+            ? `¡Perdiste!${money ? `\n\nDinero perdido: $${-money}` : ""}`
             : `¡Empate!\n\nExp: +${exp}`;
 
       const pokemonLeveledUp = await prologService.levelUpActivePokemon();
@@ -594,7 +594,7 @@ export default function BattleScreen() {
     const enemyPokemon = await prologService.getEnemyPokemon();
     setEnemy((prev) => (prev ? [enemyPokemon, prev[1]] : prev));
 
-    const badge = (await prologService.getGymInfo()).badge;
+    const badge = await prologService.gainedBadge();
     setBadgeWon(badge);
     await prologService.endBattle();
 
@@ -606,7 +606,11 @@ export default function BattleScreen() {
       return { name, exp: e.exp };
     });
 
-    setMessage("¡Has ganado el gimnasio!");
+    setMessage(
+      "¡Has ganado el gimnasio!\n\nLa medalla " +
+        badge.toUpperCase() +
+        " es tuya",
+    );
     setButtons([
       { label: "", onPress: () => {} },
       {
