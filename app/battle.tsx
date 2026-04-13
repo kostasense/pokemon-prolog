@@ -488,8 +488,7 @@ export default function BattleScreen() {
 
         if (isTeamDead) {
           setMessage("¡Tu equipo ha sido derrotado!");
-          const battleEnded = await prologService.endBattle();
-          console.log("endBattle: ", battleEnded);
+          await prologService.endBattle();
           setButtons([
             { label: "", onPress: () => {} },
             { label: "Volver →", onPress: () => router.push("/map" as any) },
@@ -567,8 +566,7 @@ export default function BattleScreen() {
                 {
                   label: "Siguiente →",
                   onPress: async () => {
-                    const battleEnded = await prologService.endBattle();
-                    console.log("endBattle: ", battleEnded);
+                    await prologService.endBattle();
                     router.push("/map" as any);
                   },
                 },
@@ -576,8 +574,7 @@ export default function BattleScreen() {
                 { label: "", onPress: () => {} },
               ]);
             } else {
-              const battleEnded = await prologService.endBattle();
-              console.log("endBattle: ", battleEnded);
+              await prologService.endBattle();
               router.push("/map" as any);
             }
           },
@@ -589,6 +586,7 @@ export default function BattleScreen() {
   }
 
   async function handleGymWin() {
+    await prologService.endBattle();
     const expTeam = await prologService.getGymGainedExp();
 
     const enemyPokemon = await prologService.getEnemyPokemon();
@@ -596,7 +594,6 @@ export default function BattleScreen() {
 
     const badge = await prologService.gainedBadge();
     setBadgeWon(badge);
-    await prologService.endBattle();
 
     const team = await prologService.getTeamPokemons();
 
