@@ -134,6 +134,39 @@ export default function MapScreen() {
   }
 
   async function handleMover(startIndex = 0) {
+    const isTeamNuked = await prologService.checkIfTeamNuked();
+
+    if (isTeamNuked) {
+      setMessage(
+        "No puedes salir de la ciudad,\n\nTus Pokémon están muy débiles",
+      );
+
+      const newButtons: ActionButton[] = [
+        {
+          label: "← Volver",
+          onPress: () => {
+            goMain();
+          },
+        },
+        {
+          label: "",
+          onPress: () => {},
+        },
+        {
+          label: "",
+          onPress: () => {},
+        },
+        {
+          label: "",
+          onPress: () => {},
+        },
+      ];
+
+      setButtons(newButtons);
+
+      return;
+    }
+
     const cities = await prologService.getCitiesToMove();
 
     if (!cities || cities.length === 0) {
@@ -556,7 +589,9 @@ export default function MapScreen() {
     }
   }
 
-  function handleCurar() {
+  async function handleCurar() {
+    const pokemonsFetched = await prologService.getTeamPokemons();
+    setPokemons(pokemonsFetched);
     setPokemonViewOpen(true);
     setMessage("Curar Pokémon");
 
@@ -564,7 +599,7 @@ export default function MapScreen() {
       {
         label: "Curar completamente",
         onPress: async () => {
-          const healed = await prologService.healTeam(pokemons);
+          const healed = await prologService.healTeam(pokemonsFetched);
           if (healed) {
             const pokemonsFetched = await prologService.getTeamPokemons();
 
@@ -620,6 +655,8 @@ export default function MapScreen() {
         getLocationById(playerLocation.main)?.label,
     );
 
+    const gymInfo = await prologService.getGymInfo();
+
     const newButtons: ActionButton[] = [
       {
         label: "Combatir",
@@ -627,7 +664,14 @@ export default function MapScreen() {
           const isChallengeEffective = await prologService.challengeLeader();
 
           if (isChallengeEffective) {
-            console.log(isChallengeEffective);
+            router.push({
+              pathname: "/battle",
+              params: {
+                eventType: "gym",
+                gym: "true",
+                fights: String(gymInfo.fights),
+              },
+            });
           } else {
             setMessage("Error al continuar con el reto :(");
             setButtons([

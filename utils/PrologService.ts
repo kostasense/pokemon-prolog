@@ -4,6 +4,7 @@ import {
   Backpack,
   Egg,
   FoePokemon,
+  Gym,
   Location,
   Pokeball,
   Pokemon,
@@ -259,11 +260,19 @@ export class PrologService {
     return foePokemon;
   }
 
-  async getGymLeader(): Promise<string> {
+  async getGymInfo(): Promise<Gym> {
     const result = await query(
       "location(Main, Place), gymnasium(Main, Leader, Fights, Badge)",
     );
-    return result[0].Leader.toUpperCase();
+
+    const gym: Gym = {
+      city: result[0].Main,
+      leader: result[0].Leader.toUpperCase(),
+      fights: result[0].Fights,
+      badge: result[0].Badge.toUpperCase(),
+    };
+
+    return gym;
   }
 
   async getInRouteTrainer(): Promise<string> {
@@ -340,11 +349,6 @@ export class PrologService {
     return result[0].Money;
   }
 
-  async getGainedBadge(leader: string): Promise<string> {
-    const result = await query(`gymnasium(City, ${leader}, Fights, Badge)`);
-    return result[0].Badge;
-  }
-
   async checkIfTeamNuked(): Promise<boolean> {
     const result = await prove("backpack(_, _, _, Team), isTeamNuked(Team)");
     return result;
@@ -352,6 +356,11 @@ export class PrologService {
 
   async endBattle(): Promise<boolean> {
     const result = await prove("endBattle");
+    return result;
+  }
+
+  async levelUpActivePokemon(): Promise<boolean> {
+    const result = await prove("levelUp");
     return result;
   }
 }

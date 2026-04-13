@@ -52,35 +52,63 @@ export default function BattleScreen() {
   });
   const [trainerVisible, setTrainerVisible] = useState(false);
   const [enemyPokemonVisible, setEnemyPokemonVisible] = useState(false);
-  const [round, setRound] = useState(1);
+  const roundRef = useRef(1);
   const [fight, setFight] = useState(1);
   const [badgeWon, setBadgeWon] = useState("");
 
   const enemyX = useRef(new Animated.Value(VIEW_W)).current;
   const playerX = useRef(new Animated.Value(-VIEW_W)).current;
   const enemyPokemonX = useRef(new Animated.Value(VIEW_W)).current;
-  const blinking = useRef(new Animated.Value(0)).current;
+  const blinkingFoe = useRef(new Animated.Value(0)).current;
+  const blinkingPokemon = useRef(new Animated.Value(0)).current;
 
-  const blink = blinking.interpolate({
+  const blinkFoe = blinkingFoe.interpolate({
     inputRange: [0, 1],
     outputRange: [1, 0.2],
   });
 
-  const anim = Animated.loop(
-    Animated.sequence([
-      Animated.timing(blinking, {
-        toValue: 1,
-        duration: 150,
-        useNativeDriver: true,
-      }),
-      Animated.timing(blinking, {
-        toValue: 0,
-        duration: 150,
-        useNativeDriver: true,
-      }),
-    ]),
-    { iterations: 3 },
-  );
+  const blinkPokemon = blinkingPokemon.interpolate({
+    inputRange: [0, 1],
+    outputRange: [1, 0.2],
+  });
+
+  function blinkFoeSprite(onDone: () => void) {
+    blinkingFoe.setValue(0);
+    Animated.loop(
+      Animated.sequence([
+        Animated.timing(blinkingFoe, {
+          toValue: 1,
+          duration: 150,
+          useNativeDriver: true,
+        }),
+        Animated.timing(blinkingFoe, {
+          toValue: 0,
+          duration: 150,
+          useNativeDriver: true,
+        }),
+      ]),
+      { iterations: 3 },
+    ).start(onDone);
+  }
+
+  function blinkPlayerSprite(onDone: () => void) {
+    blinkingPokemon.setValue(0);
+    Animated.loop(
+      Animated.sequence([
+        Animated.timing(blinkingPokemon, {
+          toValue: 1,
+          duration: 150,
+          useNativeDriver: true,
+        }),
+        Animated.timing(blinkingPokemon, {
+          toValue: 0,
+          duration: 150,
+          useNativeDriver: true,
+        }),
+      ]),
+      { iterations: 3 },
+    ).start(onDone);
+  }
 
   useEffect(() => {
     async function loadData() {
@@ -89,7 +117,7 @@ export default function BattleScreen() {
         eventType === "trainer"
           ? await prologService.getInRouteTrainer()
           : isGym
-            ? await prologService.getGymLeader()
+            ? (await prologService.getGymInfo()).leader
             : "";
       setEnemy([enemyPokemon, trainer]);
 
@@ -110,7 +138,7 @@ export default function BattleScreen() {
         setTimeout(() => {
           if (isGym && trainer !== "") {
             setMessage(
-              `El líder de gimnasio ${trainer}\n\nha aceptado tu desafío`,
+              `Líder de gimnasio ${trainer}\n\nha aceptado tu desafío`,
             );
           } else if (trainer !== "") {
             setMessage("¡" + trainer + " quiere pelear!");
@@ -201,7 +229,7 @@ export default function BattleScreen() {
         useNativeDriver: true,
       }).start(() => {
         // si es trainer, reemplazar sprite del trainer por el pokemon enemigo
-        if (eventType === "trainer") {
+        if (eventType === "trainer" || isGym) {
           setTrainerVisible(false);
           setEnemyPokemonVisible(true);
           Animated.parallel([
@@ -253,22 +281,16 @@ export default function BattleScreen() {
         label: moves[startIndex] ?? "",
         onPress: () => {
           setMessage(active.pokemon + " ha usado " + moves[startIndex]);
-          anim.start();
-          setTimeout(() => {
-            anim.stop();
-            handlePlayerMove(moves[startIndex]);
-          }, 1500);
+          setButtons(getEmptyButtons());
+          blinkFoeSprite(() => handlePlayerMove(moves[startIndex]));
         },
       },
       {
         label: moves[startIndex + 1] ?? "",
         onPress: () => {
           setMessage(active.pokemon + " ha usado " + moves[startIndex + 1]);
-          anim.start();
-          setTimeout(() => {
-            anim.stop();
-            handlePlayerMove(moves[startIndex + 1]);
-          }, 1500);
+          setButtons(getEmptyButtons());
+          blinkFoeSprite(() => handlePlayerMove(moves[startIndex]));
         },
       },
       { label: "← Volver", onPress: () => goBattle() },
@@ -288,10 +310,10 @@ export default function BattleScreen() {
 
     await refreshStats();
 
-    const battleEnd = await prologService.checkIfWinner(round);
+    const battleEnd = await prologService.checkIfWinner(roundRef.current);
     console.log(battleEnd);
 
-    setRound((prev) => prev + 1);
+    roundRef.current += 1;
 
     if (battleEnd) {
       await handleRoundEnd();
@@ -312,26 +334,24 @@ export default function BattleScreen() {
           if (!playerHit) return;
           const enemyPokemon = await prologService.getEnemyPokemon();
           setMessage(enemyPokemon.pokemon + " ha usado " + playerHit);
-          anim.start();
+          setButtons(getEmptyButtons());
 
-          setTimeout(async () => {
-            anim.stop();
+          blinkPlayerSprite(async () => {
             await refreshStats();
-
-            const battleEnd = await prologService.checkIfWinner(round);
-
+            const battleEnd = await prologService.checkIfWinner(
+              roundRef.current,
+            );
             if (battleEnd) {
               await handleRoundEnd();
               return;
             }
-
-            if (round >= 8) {
+            if (roundRef.current >= 8) {
               await handleRoundEnd();
             } else {
-              setRound((prev) => prev + 1);
+              roundRef.current += 1;
               goBattle();
             }
-          }, 1500);
+          });
         },
       },
       { label: "", onPress: () => {} },
@@ -349,7 +369,7 @@ export default function BattleScreen() {
           await handleGymWin();
         } else {
           setFight((prev) => prev + 1);
-          setRound(1);
+          roundRef.current = 1;
 
           const newEnemy = await prologService.getEnemyPokemon();
           setEnemy((prev) => (prev ? [newEnemy, prev[1]] : prev));
@@ -374,36 +394,85 @@ export default function BattleScreen() {
             { label: "", onPress: () => {} },
             {
               label: "Siguiente →",
-              onPress: () => {
-                setMessage("¿Quieres cambiar de Pokémon?");
-                setButtons([
-                  {
-                    label: "SI",
-                    onPress: () => {
-                      setPokemonViewOpen(true);
-                      setMessage("Elige un Pokémon:");
-                      setButtons([
-                        { label: "", onPress: () => {} },
-                        {
-                          label: "Aceptar →",
-                          onPress: () =>
-                            handleChoosePokemonGym(selectedTagRef.current),
-                        },
-                        { label: "", onPress: () => {} },
-                        { label: "", onPress: () => {} },
-                      ]);
+              onPress: async () => {
+                const pokemonLeveledUp =
+                  await prologService.levelUpActivePokemon();
+                if (pokemonLeveledUp) {
+                  const active = await prologService.getActivePokemon();
+                  setMessage("¡" + active.pokemon + " ha subido de nivel!");
+                  await refreshStats();
+                  setButtons([
+                    { label: "", onPress: () => {} },
+                    {
+                      label: "Siguiente →",
+                      onPress: async () => {
+                        setMessage("¿Quieres cambiar de Pokémon?");
+                        setButtons([
+                          {
+                            label: "SI",
+                            onPress: () => {
+                              setPokemonViewOpen(true);
+                              setMessage("Elige un Pokémon:");
+                              setButtons([
+                                { label: "", onPress: () => {} },
+                                {
+                                  label: "Aceptar →",
+                                  onPress: () =>
+                                    handleChoosePokemonGym(
+                                      selectedTagRef.current,
+                                    ),
+                                },
+                                { label: "", onPress: () => {} },
+                                { label: "", onPress: () => {} },
+                              ]);
+                            },
+                          },
+                          {
+                            label: "NO",
+                            onPress: () => {
+                              roundRef.current = 1;
+                              goBattle();
+                            },
+                          },
+                          { label: "", onPress: () => {} },
+                          { label: "", onPress: () => {} },
+                        ]);
+                      },
                     },
-                  },
-                  {
-                    label: "NO",
-                    onPress: () => {
-                      setRound(1);
-                      goBattle();
+                    { label: "", onPress: () => {} },
+                    { label: "", onPress: () => {} },
+                  ]);
+                } else {
+                  setMessage("¿Quieres cambiar de Pokémon?");
+                  setButtons([
+                    {
+                      label: "SI",
+                      onPress: () => {
+                        setPokemonViewOpen(true);
+                        setMessage("Elige un Pokémon:");
+                        setButtons([
+                          { label: "", onPress: () => {} },
+                          {
+                            label: "Aceptar →",
+                            onPress: () =>
+                              handleChoosePokemonGym(selectedTagRef.current),
+                          },
+                          { label: "", onPress: () => {} },
+                          { label: "", onPress: () => {} },
+                        ]);
+                      },
                     },
-                  },
-                  { label: "", onPress: () => {} },
-                  { label: "", onPress: () => {} },
-                ]);
+                    {
+                      label: "NO",
+                      onPress: () => {
+                        roundRef.current = 1;
+                        goBattle();
+                      },
+                    },
+                    { label: "", onPress: () => {} },
+                    { label: "", onPress: () => {} },
+                  ]);
+                }
               },
             },
             { label: "", onPress: () => {} },
@@ -414,6 +483,8 @@ export default function BattleScreen() {
         const team = await prologService.getTeamPokemons();
 
         const isTeamDead = await prologService.checkIfTeamNuked();
+
+        console.log("isTeamDead: ", isTeamDead);
 
         if (isTeamDead) {
           setMessage("¡Tu equipo ha sido derrotado!");
@@ -429,7 +500,7 @@ export default function BattleScreen() {
           setPokemons(team);
           setMessage("¡Tu Pokémon ha sido derrotado!\n\nElige otro Pokémon:");
           setPokemonViewOpen(true);
-          setRound(1);
+          roundRef.current = 1;
           setButtons([
             { label: "", onPress: () => {} },
             {
@@ -441,7 +512,7 @@ export default function BattleScreen() {
           ]);
         }
       } else {
-        setRound(1);
+        roundRef.current = 1;
         setMessage("¡Empate!\n\n¿Quieres cambiar de Pokémon?");
         setButtons([
           {
@@ -471,8 +542,6 @@ export default function BattleScreen() {
     } else {
       const exp = await prologService.getGainedExp();
       const money = await prologService.getGainedMoney();
-      const battleEnded = await prologService.endBattle();
-      console.log("endBattle: ", battleEnded);
 
       const resultMsg =
         winner === "player"
@@ -481,10 +550,38 @@ export default function BattleScreen() {
             ? `¡Perdiste!\n\n${money ? `Dinero perdido: $${-money}` : ""}`
             : `¡Empate!\n\nExp: +${exp}`;
 
+      const pokemonLeveledUp = await prologService.levelUpActivePokemon();
+
       setMessage(resultMsg);
       setButtons([
         { label: "", onPress: () => {} },
-        { label: "Siguiente →", onPress: () => router.push("/map" as any) },
+        {
+          label: "Siguiente →",
+          onPress: async () => {
+            if (pokemonLeveledUp) {
+              const active = await prologService.getActivePokemon();
+              setMessage("¡" + active.pokemon + " ha subido de nivel!");
+              await refreshStats();
+              setButtons([
+                { label: "", onPress: () => {} },
+                {
+                  label: "Siguiente →",
+                  onPress: async () => {
+                    const battleEnded = await prologService.endBattle();
+                    console.log("endBattle: ", battleEnded);
+                    router.push("/map" as any);
+                  },
+                },
+                { label: "", onPress: () => {} },
+                { label: "", onPress: () => {} },
+              ]);
+            } else {
+              const battleEnded = await prologService.endBattle();
+              console.log("endBattle: ", battleEnded);
+              router.push("/map" as any);
+            }
+          },
+        },
         { label: "", onPress: () => {} },
         { label: "", onPress: () => {} },
       ]);
@@ -493,14 +590,16 @@ export default function BattleScreen() {
 
   async function handleGymWin() {
     const expTeam = await prologService.getGymGainedExp();
-    const badge = await prologService.getGainedBadge(enemy![1].toLowerCase());
+
+    const enemyPokemon = await prologService.getEnemyPokemon();
+    setEnemy((prev) => (prev ? [enemyPokemon, prev[1]] : prev));
+
+    const badge = (await prologService.getGymInfo()).badge;
     setBadgeWon(badge);
-    const battleEnded = await prologService.endBattle();
-    console.log("endBattle: ", battleEnded);
+    await prologService.endBattle();
 
     const team = await prologService.getTeamPokemons();
 
-    // construir lista de entradas con nombre en vez de tag
     const expEntries = expTeam.map((e) => {
       const found = team.find((p) => p.tag === e.tag);
       const name = found ? found.pokemon : `Tag ${e.tag}`;
@@ -508,6 +607,15 @@ export default function BattleScreen() {
     });
 
     setMessage("¡Has ganado el gimnasio!");
+    setButtons([
+      { label: "", onPress: () => {} },
+      {
+        label: "Siguiente →",
+        onPress: () => showExpEntry(0),
+      },
+      { label: "", onPress: () => {} },
+      { label: "", onPress: () => {} },
+    ]);
 
     function showExpEntry(index: number) {
       const entry = expEntries[index];
@@ -530,8 +638,6 @@ export default function BattleScreen() {
         { label: "", onPress: () => {} },
       ]);
     }
-
-    showExpEntry(0);
   }
 
   async function handleChoosePokemonGym(tag: number) {
@@ -575,7 +681,7 @@ export default function BattleScreen() {
         }),
       ]).start();
 
-      setRound(1);
+      roundRef.current = 1;
       goBattle();
     }
   }
@@ -809,7 +915,7 @@ export default function BattleScreen() {
                 source={pokemonSprites[enemy[0].pokemon]}
                 style={[
                   scaleImage(SPRITE_SIZE / 1.5, SPRITE_SIZE / 1.5),
-                  { opacity: blink },
+                  { opacity: blinkFoe },
                 ]}
                 resizeMode="contain"
               />
@@ -821,7 +927,7 @@ export default function BattleScreen() {
                     scaleImage(SPRITE_SIZE / 1.5, SPRITE_SIZE / 1.5),
                     {
                       transform: [{ translateX: enemyPokemonX }],
-                      opacity: blink,
+                      opacity: blinkFoe,
                     },
                   ]}
                   resizeMode="contain"
@@ -847,7 +953,7 @@ export default function BattleScreen() {
               source={pokemonSprites[activePokemon.pokemon]}
               style={[
                 scaleImage(SPRITE_SIZE / 1.5, SPRITE_SIZE / 1.5),
-                { opacity: blink },
+                { opacity: blinkPokemon },
               ]}
               resizeMode="contain"
             />

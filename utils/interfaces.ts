@@ -41,3 +41,10 @@ export interface Pokeball {
   name: string;
   cost: number;
 }
+
+export interface Gym {
+  city: string;
+  leader: string;
+  fights: number;
+  badge: string;
+}
