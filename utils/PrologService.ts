@@ -292,7 +292,7 @@ export class PrologService {
   }
 
   async hitEnemyWithMove(move: string): Promise<boolean> {
-    const select = await prove(`selectMove("${move}")`);
+    const select = await prove(`selectMove('${move}')`);
 
     let result = false;
 

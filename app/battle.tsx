@@ -310,7 +310,8 @@ export default function BattleScreen() {
         onPress: async () => {
           const playerHit = await prologService.hitPlayerWithMove();
           if (!playerHit) return;
-          setMessage(enemy![0].pokemon + " ha usado " + playerHit);
+          const enemyPokemon = await prologService.getEnemyPokemon();
+          setMessage(enemyPokemon.pokemon + " ha usado " + playerHit);
           anim.start();
 
           setTimeout(async () => {
@@ -416,7 +417,8 @@ export default function BattleScreen() {
 
         if (isTeamDead) {
           setMessage("¡Tu equipo ha sido derrotado!");
-          await prologService.endBattle();
+          const battleEnded = await prologService.endBattle();
+          console.log("endBattle: ", battleEnded);
           setButtons([
             { label: "", onPress: () => {} },
             { label: "Volver →", onPress: () => router.push("/map" as any) },
@@ -469,7 +471,8 @@ export default function BattleScreen() {
     } else {
       const exp = await prologService.getGainedExp();
       const money = await prologService.getGainedMoney();
-      await prologService.endBattle();
+      const battleEnded = await prologService.endBattle();
+      console.log("endBattle: ", battleEnded);
 
       const resultMsg =
         winner === "player"
@@ -492,7 +495,8 @@ export default function BattleScreen() {
     const expTeam = await prologService.getGymGainedExp();
     const badge = await prologService.getGainedBadge(enemy![1].toLowerCase());
     setBadgeWon(badge);
-    await prologService.endBattle();
+    const battleEnded = await prologService.endBattle();
+    console.log("endBattle: ", battleEnded);
 
     const team = await prologService.getTeamPokemons();
 
@@ -801,7 +805,7 @@ export default function BattleScreen() {
               />
             )}
             {enemy[1] === "" ? (
-              <Image
+              <Animated.Image
                 source={pokemonSprites[enemy[0].pokemon]}
                 style={[
                   scaleImage(SPRITE_SIZE / 1.5, SPRITE_SIZE / 1.5),
@@ -839,7 +843,7 @@ export default function BattleScreen() {
               },
             ]}
           >
-            <Image
+            <Animated.Image
               source={pokemonSprites[activePokemon.pokemon]}
               style={[
                 scaleImage(SPRITE_SIZE / 1.5, SPRITE_SIZE / 1.5),

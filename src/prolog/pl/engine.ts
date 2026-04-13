@@ -811,9 +811,7 @@ export const engine = `
     %   changes state from fighting to idle
     exitBattle:-
         retract(inBattle(_)),
-        asserta(inBattle(no)),
-        retract(idle(_)),
-        asserta(idle(city)).
+        asserta(inBattle(no)).
 
     %!  endBattle
     %   allows travel and/or exits battle based on battle winner 
