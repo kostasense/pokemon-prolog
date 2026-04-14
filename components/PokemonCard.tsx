@@ -229,7 +229,7 @@ const styles = StyleSheet.create({
   },
   info: {
     fontFamily: "GameFont",
-    fontSize: CARD_W / 13,
+    fontSize: SCREEN_W < MAP_W ? CARD_W / 10 : CARD_W / 13,
     color: "#1a1a1a",
     textAlign: "center",
   },
@@ -254,7 +254,7 @@ const styles = StyleSheet.create({
   },
   barLabel: {
     fontFamily: "GameFont",
-    fontSize: CARD_W / 17,
+    fontSize: SCREEN_W < MAP_W ? CARD_W / 12 : CARD_W / 17,
     width: 30,
     color: "#1a1a1a",
     textAlign: "center",

@@ -24,12 +24,14 @@ const VIEW_W = Math.min(SCREEN_W, SCENE_W);
 
 const ENEMY_RIGHT = VIEW_W * 0.05;
 const ENEMY_TOP = SCENE_H * 0.05;
-const BALL_RIGHT = VIEW_W - VIEW_W * 0.23;
-const BALL_TOP = -SCENE_H + SCENE_H * 0.4;
+const BALL_RIGHT =
+  SCREEN_W < SCENE_W ? VIEW_W - VIEW_W * 0.27 : VIEW_W - VIEW_W * 0.23;
+const BALL_TOP =
+  SCREEN_W < SCENE_W ? -SCENE_H + SCENE_H * 0.35 : -SCENE_H + SCENE_H * 0.4;
 const PLAYER_LEFT = VIEW_W * 0.05;
 const PLAYER_BOTTOM = SCENE_H * 0.05;
-const SPRITE_SIZE = VIEW_W * 0.3;
-const STATS_W = VIEW_W * 0.3;
+const SPRITE_SIZE = SCREEN_W < SCENE_W ? VIEW_W * 0.4 : VIEW_W * 0.3;
+const STATS_W = SCREEN_W < SCENE_W ? VIEW_W * 0.4 : VIEW_W * 0.35;
 
 export default function BattleScreen() {
   const { eventType, gym, fights } = useLocalSearchParams();
@@ -1236,11 +1238,11 @@ export default function BattleScreen() {
 
 const styles = StyleSheet.create({
   scene: {
-    flex: 1,
     justifyContent: "center",
     alignItems: "center",
     overflow: "hidden",
     width: VIEW_W,
+    height: SCENE_H,
     backgroundColor: "#fff",
   },
   enemyContainer: {
@@ -1267,7 +1269,7 @@ const styles = StyleSheet.create({
   },
   info: {
     fontFamily: "GameFont",
-    fontSize: VIEW_W / 30,
+    fontSize: SCREEN_W < SCENE_W ? VIEW_W / 25 : VIEW_W / 30,
     color: "#1a1a1a",
     textAlign: "center",
   },
@@ -1292,7 +1294,7 @@ const styles = StyleSheet.create({
   },
   barLabel: {
     fontFamily: "GameFont",
-    fontSize: VIEW_W / 40,
+    fontSize: SCREEN_W < SCENE_W ? VIEW_W / 30 : VIEW_W / 40,
     width: 30,
     color: "#1a1a1a",
     textAlign: "center",
