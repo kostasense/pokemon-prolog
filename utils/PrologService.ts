@@ -394,6 +394,28 @@ export class PrologService {
 
     return [true, results[0].SavedIn];
   }
+
+  async getNewMoves(): Promise<string[]> {
+    const results = await query("newMove(Moves)");
+
+    if (results.length === 0) {
+      return [];
+    }
+
+    return results[0].Moves;
+  }
+
+  async resolveMove(move: string, decision: string): Promise<boolean> {
+    const results = await prove(`resolveMove('${move}', ${decision})`);
+
+    return results;
+  }
+
+  async forgetMove(move: string): Promise<boolean> {
+    const results = await prove(`forgetMove('${move}')`);
+
+    return results;
+  }
 }
 
 export const prologService = new PrologService();
