@@ -24,6 +24,8 @@ const VIEW_W = Math.min(SCREEN_W, SCENE_W);
 
 const ENEMY_RIGHT = VIEW_W * 0.05;
 const ENEMY_TOP = SCENE_H * 0.05;
+const BALL_RIGHT = VIEW_W - VIEW_W * 0.23;
+const BALL_TOP = -SCENE_H + SCENE_H * 0.4;
 const PLAYER_LEFT = VIEW_W * 0.05;
 const PLAYER_BOTTOM = SCENE_H * 0.05;
 const SPRITE_SIZE = VIEW_W * 0.3;
@@ -55,12 +57,19 @@ export default function BattleScreen() {
   const roundRef = useRef(1);
   const [fight, setFight] = useState(1);
   const [badgeWon, setBadgeWon] = useState("");
+  const [animating, setAnimating] = useState(false);
 
   const enemyX = useRef(new Animated.Value(VIEW_W)).current;
   const playerX = useRef(new Animated.Value(-VIEW_W)).current;
+  const ballX = useRef(new Animated.Value(0)).current;
+  const ballY = useRef(new Animated.Value(0)).current;
   const enemyPokemonX = useRef(new Animated.Value(VIEW_W)).current;
   const blinkingFoe = useRef(new Animated.Value(0)).current;
   const blinkingPokemon = useRef(new Animated.Value(0)).current;
+  const usingBall = useRef(new Animated.Value(0)).current;
+  const usingSuperball = useRef(new Animated.Value(0)).current;
+  const pokemonScale = useRef(new Animated.Value(1)).current;
+  const wobble = useRef(new Animated.Value(0)).current;
 
   const blinkFoe = blinkingFoe.interpolate({
     inputRange: [0, 1],
@@ -70,6 +79,16 @@ export default function BattleScreen() {
   const blinkPokemon = blinkingPokemon.interpolate({
     inputRange: [0, 1],
     outputRange: [1, 0.2],
+  });
+
+  const useBall = usingBall.interpolate({
+    inputRange: [0, 1],
+    outputRange: [0, 1],
+  });
+
+  const useSuperball = usingSuperball.interpolate({
+    inputRange: [0, 1],
+    outputRange: [0, 1],
   });
 
   function blinkFoeSprite(onDone: () => void) {
@@ -109,6 +128,105 @@ export default function BattleScreen() {
       { iterations: 3 },
     ).start(onDone);
   }
+
+  function throwBall() {
+    usingBall.setValue(1);
+    Animated.parallel([
+      Animated.timing(ballX, {
+        toValue: BALL_RIGHT,
+        duration: 500,
+        useNativeDriver: true,
+      }),
+      Animated.timing(ballY, {
+        toValue: BALL_TOP,
+        duration: 500,
+        useNativeDriver: true,
+      }),
+    ]).start(() => {
+      setAnimating(true);
+      Animated.timing(pokemonScale, {
+        toValue: 0,
+        duration: 500,
+        useNativeDriver: true,
+      }).start(() => {
+        wobble.setValue(0);
+        Animated.loop(
+          Animated.sequence([
+            Animated.timing(wobble, {
+              toValue: 1,
+              duration: 150,
+              useNativeDriver: true,
+            }),
+            Animated.timing(wobble, {
+              toValue: -1,
+              duration: 150,
+              useNativeDriver: true,
+            }),
+            Animated.timing(wobble, {
+              toValue: 0,
+              duration: 150,
+              useNativeDriver: true,
+            }),
+          ]),
+          { iterations: 3 },
+        ).start(async () => {
+          handleCatchPokemon("normal");
+        });
+      });
+    });
+  }
+
+  function throwSuperball() {
+    usingSuperball.setValue(1);
+    Animated.parallel([
+      Animated.timing(ballX, {
+        toValue: BALL_RIGHT,
+        duration: 500,
+        useNativeDriver: true,
+      }),
+      Animated.timing(ballY, {
+        toValue: BALL_TOP,
+        duration: 500,
+        useNativeDriver: true,
+      }),
+    ]).start(() => {
+      setAnimating(true);
+      Animated.timing(pokemonScale, {
+        toValue: 0,
+        duration: 500,
+        useNativeDriver: true,
+      }).start(() => {
+        wobble.setValue(0);
+        Animated.loop(
+          Animated.sequence([
+            Animated.timing(wobble, {
+              toValue: 1,
+              duration: 150,
+              useNativeDriver: true,
+            }),
+            Animated.timing(wobble, {
+              toValue: -1,
+              duration: 150,
+              useNativeDriver: true,
+            }),
+            Animated.timing(wobble, {
+              toValue: 0,
+              duration: 150,
+              useNativeDriver: true,
+            }),
+          ]),
+          { iterations: 3 },
+        ).start(async () => {
+          handleCatchPokemon("superball");
+        });
+      });
+    });
+  }
+
+  const rotation = wobble.interpolate({
+    inputRange: [-1, 0, 1],
+    outputRange: ["-15deg", "0deg", "15deg"],
+  });
 
   useEffect(() => {
     async function loadData() {
@@ -311,7 +429,6 @@ export default function BattleScreen() {
     await refreshStats();
 
     const battleEnd = await prologService.checkIfWinner(roundRef.current);
-    console.log(battleEnd);
 
     roundRef.current += 1;
 
@@ -321,6 +438,95 @@ export default function BattleScreen() {
     }
 
     handleEnemyMove();
+  }
+
+  async function handleCatchPokemon(type: string) {
+    let catchResults;
+
+    if (type === "normal") {
+      catchResults = await prologService.usePokeball();
+    } else {
+      catchResults = await prologService.useSuperball();
+    }
+
+    if (catchResults[0]) {
+      const enemyPokemon = await prologService.getEnemyPokemon();
+      setMessage("¡El " + enemyPokemon.pokemon + " salvaje ha sido capturado!");
+      setButtons([
+        { label: "", onPress: () => {} },
+        {
+          label: "Siguiente →",
+          onPress: () => {
+            setMessage(
+              "Ha sido agregado a la " +
+                (catchResults[1] === "backpack" ? "mochila" : "PC"),
+            );
+            setButtons([
+              { label: "", onPress: () => {} },
+              {
+                label: "Siguiente →",
+                onPress: async () => {
+                  await prologService.endBattle();
+                  router.push("/map" as any);
+                },
+              },
+              { label: "", onPress: () => {} },
+              { label: "", onPress: () => {} },
+            ]);
+          },
+        },
+        { label: "", onPress: () => {} },
+        { label: "", onPress: () => {} },
+      ]);
+    } else {
+      const battleEnd = await prologService.checkIfWinner(roundRef.current);
+
+      roundRef.current += 1;
+
+      usingBall.setValue(0);
+      usingSuperball.setValue(0);
+
+      Animated.parallel([
+        Animated.timing(ballX, {
+          toValue: 0,
+          duration: 100,
+          useNativeDriver: true,
+        }),
+        Animated.timing(ballY, {
+          toValue: 0,
+          duration: 100,
+          useNativeDriver: true,
+        }),
+      ]).start(() => {
+        Animated.timing(pokemonScale, {
+          toValue: 1,
+          duration: 500,
+          useNativeDriver: true,
+        }).start(async () => {
+          setAnimating(false);
+
+          const enemyPokemon = await prologService.getEnemyPokemon();
+
+          setMessage("¡El " + enemyPokemon.pokemon + " salvaje ha escapado!");
+          setButtons([
+            { label: "", onPress: () => {} },
+            {
+              label: "Siguiente →",
+              onPress: async () => {
+                if (battleEnd) {
+                  await handleRoundEnd();
+                  return;
+                }
+
+                handleEnemyMove();
+              },
+            },
+            { label: "", onPress: () => {} },
+            { label: "", onPress: () => {} },
+          ]);
+        });
+      });
+    }
   }
 
   async function handleEnemyMove() {
@@ -664,27 +870,28 @@ export default function BattleScreen() {
     }
 
     const chosen = await prologService.choosePokemon(tag);
-    if (chosen) {
+
+    if (!chosen) return;
+
+    Animated.timing(playerX, {
+      toValue: -VIEW_W,
+      duration: 300,
+      useNativeDriver: true,
+    }).start(async () => {
       const active = await prologService.getActivePokemon();
       setActivePokemon(active);
       setPokemonViewOpen(false);
+      playerX.setValue(-VIEW_W);
 
-      Animated.sequence([
-        Animated.timing(playerX, {
-          toValue: -VIEW_W,
-          duration: 300,
-          useNativeDriver: true,
-        }),
-        Animated.timing(playerX, {
-          toValue: 0,
-          duration: 400,
-          useNativeDriver: true,
-        }),
-      ]).start();
-
-      roundRef.current = 1;
-      goBattle();
-    }
+      Animated.timing(playerX, {
+        toValue: 0,
+        duration: 400,
+        useNativeDriver: true,
+      }).start(() => {
+        roundRef.current = 1;
+        goBattle();
+      });
+    });
   }
 
   async function handleMochila() {
@@ -732,7 +939,9 @@ export default function BattleScreen() {
                           { label: "", onPress: () => {} },
                         ]);
                       } else {
-                        console.log("pendiente");
+                        setMessage("...");
+                        setButtons(getEmptyButtons());
+                        throwBall();
                       }
                     },
                   },
@@ -783,7 +992,9 @@ export default function BattleScreen() {
                           { label: "", onPress: () => {} },
                         ]);
                       } else {
-                        console.log("pendiente");
+                        setMessage("...");
+                        setButtons(getEmptyButtons());
+                        throwSuperball();
                       }
                     },
                   },
@@ -916,7 +1127,11 @@ export default function BattleScreen() {
                 source={pokemonSprites[enemy[0].pokemon]}
                 style={[
                   scaleImage(SPRITE_SIZE / 1.5, SPRITE_SIZE / 1.5),
-                  { opacity: blinkFoe },
+                  {
+                    opacity: blinkFoe,
+                    transform: [{ scale: pokemonScale }],
+                    tintColor: animating ? "rgb(175, 255, 181)" : undefined,
+                  },
                 ]}
                 resizeMode="contain"
               />
@@ -970,6 +1185,48 @@ export default function BattleScreen() {
             }}
           />
         )}
+
+        <Animated.View
+          style={[
+            styles.ballContainer,
+            {
+              left: PLAYER_LEFT,
+              bottom: PLAYER_BOTTOM,
+              transform: [{ translateX: ballX }, { translateY: ballY }],
+            },
+          ]}
+        >
+          <Animated.Image
+            source={require("../assets/balls/pokeball.png")}
+            style={[
+              scaleImage(SPRITE_SIZE / 5, SPRITE_SIZE / 5),
+              { opacity: useBall },
+              { transform: [{ rotate: rotation }] },
+            ]}
+            resizeMode="contain"
+          />
+        </Animated.View>
+
+        <Animated.View
+          style={[
+            styles.ballContainer,
+            {
+              left: PLAYER_LEFT,
+              bottom: PLAYER_BOTTOM,
+              transform: [{ translateX: ballX }, { translateY: ballY }],
+            },
+          ]}
+        >
+          <Animated.Image
+            source={require("../assets/balls/superball.png")}
+            style={[
+              scaleImage(SPRITE_SIZE / 6, SPRITE_SIZE / 6),
+              { opacity: useSuperball },
+              { transform: [{ rotate: rotation }] },
+            ]}
+            resizeMode="contain"
+          />
+        </Animated.View>
       </View>
 
       {badgeWon !== "" && <BadgeWonView badge={badgeWon} />}
@@ -995,6 +1252,11 @@ const styles = StyleSheet.create({
   playerContainer: {
     position: "absolute",
     flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  ballContainer: {
+    position: "absolute",
     alignItems: "center",
     justifyContent: "center",
   },

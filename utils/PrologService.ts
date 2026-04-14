@@ -374,6 +374,26 @@ export class PrologService {
     const levels = result[0].Levels;
     return levels;
   }
+
+  async usePokeball(): Promise<[boolean, string]> {
+    const results = await query("attemptCatch(normal, SavedIn)");
+
+    if (results.length === 0) {
+      return [false, ""];
+    }
+
+    return [true, results[0].SavedIn];
+  }
+
+  async useSuperball(): Promise<[boolean, string]> {
+    const results = await query("attemptCatch(superball, SavedIn)");
+
+    if (results.length === 0) {
+      return [false, ""];
+    }
+
+    return [true, results[0].SavedIn];
+  }
 }
 
 export const prologService = new PrologService();
