@@ -38,7 +38,8 @@ export const pokemonSprites: Record<string, any> = {
   LITWICK: require("../assets/pokemon/LITWICK.png"),
   LAMPENT: require("../assets/pokemon/LAMPENT.png"),
   CHANDELURE: require("../assets/pokemon/CHANDELURE.png"),
-  MIMIKYU: require("../assets/pokemon/MIMIKYU.png"),
+  SHUPPET: require("../assets/pokemon/SHUPPET.png"),
+  BANETTE: require("../assets/pokemon/BANETTE.png"),
 };
 
 export const pokeballSprites: Record<string, any> = {

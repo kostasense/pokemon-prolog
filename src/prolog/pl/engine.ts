@@ -297,7 +297,7 @@ export const engine = `
         % check if there's space in team
         backpack(_, _, _, Team),
         length(Team, Length),
-        Length < 4,
+        Length < 6,
 
         generateTag(Tag),
         addToTeam(Tag, Pokemon),
@@ -396,10 +396,11 @@ export const engine = `
         NewAtk is Atk + 2,
         NewHP is MaxHP + 3,
 
-        NewExp is Exp - RequiredExp, 
+        NewExp is Exp - RequiredExp,
+        NewCurrent is CurrentHP + 3,
 
         retract(owned(Tag, _, _, _, _, _, _, _, _)),
-        asserta(owned(Tag, Pokemon, State, NewLevel, NewAtk, CurrentHP, NewHP, NewExp, Moves)),
+        asserta(owned(Tag, Pokemon, State, NewLevel, NewAtk, NewCurrent, NewHP, NewExp, Moves)),
         
         levelUp(N1, L).
 
@@ -427,10 +428,10 @@ export const engine = `
         retract(ownedEvolutions(Tag, _)),
         asserta(ownedEvolutions(Tag, New)),
         
+        removeFromTeam(Tag),
         retract(owned(Tag, _, _, _, _, _, _, _, _)),
         asserta(owned(Tag, Evo, A, B, C, D, E, F, G)),
         
-        removeFromTeam(Tag),
         addToTeam(Tag, Evo).
 
     resolveEvolution(rejected) :-
@@ -466,14 +467,14 @@ export const engine = `
     %   generates a random event
     event(Type):- 
         inRoute(Route, _),
-        trainer(Route, _, _, _, no),
+        trainer(Route, _, _, _, _, no),
         Events = [pokemon-35, trainer-35, egg-15, pokeball-15],
         random_between(1, 100, Roll),
         pickEvent(Roll, Events, 0, Type).
 
     event(Type):- 
         inRoute(Route, _),
-        trainer(Route, _, _, _, yes),
+        trainer(Route, _, _, _, _, yes),
         Events = [pokemon-70, egg-15, pokeball-15],
         random_between(1, 100, Roll),
         pickEvent(Roll, Events, 0, Type).
@@ -509,7 +510,7 @@ export const engine = `
         % check if there's space in team
         backpack(_, _, _, Team),
         length(Team, Length),
-        Length < 4,
+        Length < 6,
 
         generateTag(Tag),
         egg(Item, Distance),
@@ -554,8 +555,8 @@ export const engine = `
 
         % trainer
         random_between(50, 250, Money),
-        retract(trainer(Route, Trainer, _, Pokemon, Defeated)),
-        asserta(trainer(Route, Trainer, Money, Pokemon, Defeated)),
+        retract(trainer(Route, T, G, _, Pokemon, D)),
+        asserta(trainer(Route, T, G, Money, Pokemon, D)),
 
         % set type of fight in winner predicate
         retract(winner(_, _)),
@@ -762,6 +763,7 @@ export const engine = `
     gainedExp(Gained):-
         winner(player, _),
         enemy(_, _, EnemyLevel, _, _, _, _),
+        activePokemon(Tag),
         owned(Tag, Pokemon, State, Level, Atk, CurrentHP, MaxHP, Exp, Moves),
 
         Gained is EnemyLevel * 15,
@@ -773,6 +775,7 @@ export const engine = `
     gainedExp(Gained):-
         winner(draw, _),
         enemy(_, _, EnemyLevel, _, _, _, _),
+        activePokemon(Tag),
         owned(Tag, Pokemon, State, Level, Atk, CurrentHP, MaxHP, Exp, Moves),
 
         Gained is EnemyLevel * 15 / 2,
@@ -789,7 +792,7 @@ export const engine = `
         winner(player, trainer),
 
         inRoute(Route, _),
-        trainer(Route, _, Money, _, _),
+        trainer(Route, _, _, Money, _, _),
         backpack(CurrentMoney, Badges, Pokeballs, Team),
 
         Gained is (Money * 0.5),
@@ -841,8 +844,8 @@ export const engine = `
         winner(player, trainer),
         % mark trainer in route as defeated
         inRoute(R, _),
-        retract(trainer(R, T, M, P, _)),
-        asserta(trainer(R, T, M, P, yes)),
+        retract(trainer(R, T, G, M, P, _)),
+        asserta(trainer(R, T, G, M, P, yes)),
         allowTravel,
         exitBattle.
 

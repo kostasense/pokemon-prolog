@@ -1,10 +1,10 @@
 export const pokemon = `
     % starter pokemon
-    starters([charmander, bulbasaur, squirtle]).    
+    starters([charmander, bulbasaur, squirtle]).
 
     % types
     % ===== NORMAL =====
-    type(eevee,          normal).
+    type(eevee,         normal).
     type(pidgey,        normal).
     type(pidgeotto,     normal).
     type(pidgeot,       normal).
@@ -51,7 +51,8 @@ export const pokemon = `
     type(litwick,       ghost).
     type(lampent,       ghost).
     type(chandelure,    ghost).
-    type(mimikyu,       ghost).
+    type(shuppet,       ghost).
+    type(banette,       ghost).
 
     % pokéballs
     pokeball(normal,    50).
@@ -92,9 +93,10 @@ export const pokemon = `
     evolves(haunter,       gengar,         24).
     evolves(litwick,       lampent,        17).
     evolves(lampent,       chandelure,     24).
+    evolves(shuppet,       banette,        17).
 
     % egg(pokemon, required_distance)
-    egg(mimikyu,    1000).
+    egg(shuppet,    1000).
     egg(eevee,      2000).
     egg(pidgey,     2000).
     egg(jigglypuff, 2000).
@@ -133,33 +135,33 @@ export const pokemon = `
     % ===== GHOST =====
     baseStats(gastly,       5,          22).
     baseStats(litwick,      4,          19).
-    baseStats(mimikyu,      4,          20).
+    baseStats(shuppet,      4,          20).
 
     % move(move, type, attack power, level)
     % ===== NORMAL =====
-    move('Placaje',          normal, 1,  1).
-    move('Ataque Rápido',    normal, 1,  4).
-    move('Imagen',           normal, 1,  8).
-    move('Rapidez',          normal, 2,  12).
-    move('Golpe Cabeza',     normal, 2,  16).
-    move('Cuchillada',       normal, 2,  20).
-    move('Golpe Cuerpo',     normal, 1,  24).
-    move('Vozarrón',         normal, 3,  28).
-    move('Derribo',          normal, 3,  30).
+    move('Placaje',          normal,  1,  1).
+    move('Ataque Rápido',    normal,  1,  4).
+    move('Imagen',           normal,  1,  8).
+    move('Rapidez',          normal,  2,  12).
+    move('Golpe Cabeza',     normal,  2,  16).
+    move('Cuchillada',       normal,  2,  20).
+    move('Golpe Cuerpo',     normal,  1,  24).
+    move('Vozarrón',         normal,  3,  28).
+    move('Derribo',          normal,  3,  30).
 
     % ===== FIRE =====
-    move('Ascuas',           fire,   1,  6).
-    move('Colmillo Ígneo',   fire,   2,  12).
-    move('Rueda Fuego',      fire,   2,  18).
-    move('Giro Fuego',       fire,   1,  24).
-    move('Envite Ígneo',     fire,   3,  30).
+    move('Ascuas',           fire,    1,  6).
+    move('Colmillo Ígneo',   fire,    2,  12).
+    move('Rueda Fuego',      fire,    2,  18).
+    move('Giro Fuego',       fire,    1,  24).
+    move('Envite Ígneo',     fire,    3,  30).
 
     % ===== WATER =====
-    move('Pistola de Agua',     water,  1,  6).
-    move('Burbuja',          water,  2,  12).
-    move('Rayo Burbuja',     water,  1,  18).
-    move('Acua Jet',         water,  1,  24).
-    move('Hidroariete',      water,  2,  30).
+    move('Pistola Agua',     water,   1,  6).
+    move('Burbuja',          water,   2,  12).
+    move('Rayo Burbuja',     water,   1,  18).
+    move('Acua Jet',         water,   1,  24).
+    move('Hidroariete',      water,   2,  30).
 
     % ===== GRASS =====
     move('Látigo Cepa',       grass,  1,  6).
