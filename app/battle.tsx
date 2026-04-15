@@ -1,5 +1,6 @@
 /* eslint-disable react-hooks/exhaustive-deps */
 import BadgeWonView from "@/components/BadgeWonView";
+import EvolutionView from "@/components/EvolutionView";
 import GameLayout, { ActionButton } from "@/components/GameLayout";
 import PokemonTeam from "@/components/PokemonTeam";
 import { isEgg, scaleImage } from "@/utils/helpers";
@@ -60,6 +61,9 @@ export default function BattleScreen() {
   const [fight, setFight] = useState(1);
   const [badgeWon, setBadgeWon] = useState("");
   const [animating, setAnimating] = useState(false);
+  const [evolutionViewOpen, setEvolutionViewOpen] = useState(false);
+  const [startEvolution, setStartEvolution] = useState(false);
+  const [evolution, setEvolution] = useState("");
 
   const enemyX = useRef(new Animated.Value(VIEW_W)).current;
   const playerX = useRef(new Animated.Value(-VIEW_W)).current;
@@ -598,6 +602,8 @@ export default function BattleScreen() {
           setMessage(
             `¡Ganaste esta pelea!\n\nCombate ${fight} de ${maxFights}`,
           );
+          await prologService.endBattle();
+
           setButtons([
             { label: "", onPress: () => {} },
             {
@@ -618,6 +624,42 @@ export default function BattleScreen() {
 
                         if (newMoves.length > 0) {
                           handleLearnMoves(newMoves, () => {
+                            handleEvolution(() => {
+                              setMessage("¿Quieres cambiar de Pokémon?");
+                              setButtons([
+                                {
+                                  label: "SI",
+                                  onPress: () => {
+                                    setPokemonViewOpen(true);
+                                    setMessage("Elige un Pokémon:");
+                                    setButtons([
+                                      { label: "", onPress: () => {} },
+                                      {
+                                        label: "Aceptar →",
+                                        onPress: () =>
+                                          handleChoosePokemonGym(
+                                            selectedTagRef.current,
+                                          ),
+                                      },
+                                      { label: "", onPress: () => {} },
+                                      { label: "", onPress: () => {} },
+                                    ]);
+                                  },
+                                },
+                                {
+                                  label: "NO",
+                                  onPress: () => {
+                                    roundRef.current = 1;
+                                    goBattle();
+                                  },
+                                },
+                                { label: "", onPress: () => {} },
+                                { label: "", onPress: () => {} },
+                              ]);
+                            });
+                          });
+                        } else {
+                          handleEvolution(() => {
                             setMessage("¿Quieres cambiar de Pokémon?");
                             setButtons([
                               {
@@ -650,38 +692,6 @@ export default function BattleScreen() {
                               { label: "", onPress: () => {} },
                             ]);
                           });
-                        } else {
-                          setMessage("¿Quieres cambiar de Pokémon?");
-                          setButtons([
-                            {
-                              label: "SI",
-                              onPress: () => {
-                                setPokemonViewOpen(true);
-                                setMessage("Elige un Pokémon:");
-                                setButtons([
-                                  { label: "", onPress: () => {} },
-                                  {
-                                    label: "Aceptar →",
-                                    onPress: () =>
-                                      handleChoosePokemonGym(
-                                        selectedTagRef.current,
-                                      ),
-                                  },
-                                  { label: "", onPress: () => {} },
-                                  { label: "", onPress: () => {} },
-                                ]);
-                              },
-                            },
-                            {
-                              label: "NO",
-                              onPress: () => {
-                                roundRef.current = 1;
-                                goBattle();
-                              },
-                            },
-                            { label: "", onPress: () => {} },
-                            { label: "", onPress: () => {} },
-                          ]);
                         }
                       },
                     },
@@ -788,6 +798,8 @@ export default function BattleScreen() {
       const exp = await prologService.getGainedExp();
       const money = await prologService.getGainedMoney();
 
+      console.log("exp: ", exp);
+
       const resultMsg =
         winner === "player"
           ? `¡Ganaste!\n\nExp: +${exp}${money ? `\nDinero: +$${money}` : ""}`
@@ -812,6 +824,23 @@ export default function BattleScreen() {
 
               if (newMoves.length > 0) {
                 handleLearnMoves(newMoves, async () => {
+                  handleEvolution(() => {
+                    setButtons([
+                      { label: "", onPress: () => {} },
+                      {
+                        label: "Siguiente →",
+                        onPress: async () => {
+                          await prologService.endBattle();
+                          router.push("/map" as any);
+                        },
+                      },
+                      { label: "", onPress: () => {} },
+                      { label: "", onPress: () => {} },
+                    ]);
+                  });
+                });
+              } else {
+                handleEvolution(() => {
                   setButtons([
                     { label: "", onPress: () => {} },
                     {
@@ -825,19 +854,6 @@ export default function BattleScreen() {
                     { label: "", onPress: () => {} },
                   ]);
                 });
-              } else {
-                setButtons([
-                  { label: "", onPress: () => {} },
-                  {
-                    label: "Siguiente →",
-                    onPress: async () => {
-                      await prologService.endBattle();
-                      router.push("/map" as any);
-                    },
-                  },
-                  { label: "", onPress: () => {} },
-                  { label: "", onPress: () => {} },
-                ]);
               }
             } else {
               await prologService.endBattle();
@@ -927,6 +943,80 @@ export default function BattleScreen() {
     };
 
     tryLearnNext(0);
+  }
+
+  async function handleEvolution(onDone: () => void) {
+    const active = await prologService.getActivePokemon();
+    setActivePokemon(active);
+
+    const evolveResult = await prologService.checkEvolution(active.pokemon);
+
+    if (evolveResult[0]) {
+      setEvolutionViewOpen(true);
+      setEvolution(evolveResult[1]);
+      setMessage("¡" + active.pokemon + " quiere evolucionar!");
+      setButtons([
+        {
+          label: "Aceptar",
+          onPress: async () => {
+            setMessage("...");
+            setStartEvolution(true);
+            setButtons(getEmptyButtons());
+            await prologService.resolveEvolution("evolved");
+
+            setTimeout(async () => {
+              setMessage(
+                "¡" +
+                  active.pokemon +
+                  " ha evolucionado en " +
+                  evolveResult[1].toUpperCase() +
+                  "!",
+              );
+              await refreshStats();
+              setButtons([
+                { label: "", onPress: () => {} },
+                {
+                  label: "Siguiente →",
+                  onPress: () => {
+                    setEvolutionViewOpen(false);
+                    setEvolution("");
+                    setStartEvolution(false);
+                    onDone();
+                  },
+                },
+                { label: "", onPress: () => {} },
+                { label: "", onPress: () => {} },
+              ]);
+            }, 6000);
+          },
+        },
+        {
+          label: "Rechazar",
+          onPress: async () => {
+            setMessage("Se ha rechazado la evolución");
+            await prologService.resolveEvolution("rejected");
+            await refreshStats();
+            setButtons([
+              { label: "", onPress: () => {} },
+              {
+                label: "Siguiente →",
+                onPress: () => {
+                  setEvolutionViewOpen(false);
+                  setEvolution("");
+                  onDone();
+                },
+              },
+              { label: "", onPress: () => {} },
+              { label: "", onPress: () => {} },
+            ]);
+          },
+        },
+        { label: "", onPress: () => {} },
+        { label: "", onPress: () => {} },
+      ]);
+    } else {
+      onDone();
+    }
   }
 
   async function handleGymWin() {
@@ -1321,6 +1411,14 @@ export default function BattleScreen() {
             onSelect={(tag) => {
               selectedTagRef.current = tag; // ← siempre actualizado
             }}
+          />
+        )}
+
+        {evolutionViewOpen && evolution !== "" && (
+          <EvolutionView
+            pokemon={activePokemon.pokemon}
+            evolution={evolution}
+            start={startEvolution}
           />
         )}
 

@@ -362,7 +362,7 @@ export const engine = `
         addToTeam(Tag, Pokemon),
 
         % pokemon stats
-        Level = 5,
+        Level = 16,
         pokemonStats(Pokemon, Level, Atk, HP, Moves),
         allEvolutions(Pokemon, AllEvolutions),
         evolved(Pokemon, Level, AllEvolutions, Evolutions),
@@ -435,7 +435,7 @@ export const engine = `
 
     resolveEvolution(rejected) :-
         activePokemon(Tag),
-        owned(Tag, Pokemon, _, _, _, -, _, _, _),
+        owned(Tag, Pokemon, _, _, _, _, _, _, _),
         evolves(Pokemon, Evo, _),
         ownedEvolutions(Tag, Evolutions),
         updateEvolutions(Evo, rejected, Evolutions, New),

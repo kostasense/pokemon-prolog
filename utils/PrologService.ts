@@ -416,6 +416,21 @@ export class PrologService {
 
     return results;
   }
+
+  async checkEvolution(pokemon: string): Promise<[boolean, string]> {
+    const cleanName = pokemon.toLowerCase().trim();
+
+    const result = await prove("checkEvolution");
+    const evolution = await query(`evolves(${cleanName}, Evolution, _)`);
+
+    return [result, evolution[0].Evolution];
+  }
+
+  async resolveEvolution(decision: string): Promise<boolean> {
+    const results = await prove(`resolveEvolution(${decision})`);
+
+    return results;
+  }
 }
 
 export const prologService = new PrologService();
