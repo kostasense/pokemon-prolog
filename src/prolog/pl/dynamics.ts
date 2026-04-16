@@ -1,5 +1,5 @@
 export const dynamics = `
-    :- dynamic(trainer/5).
+    :- dynamic(trainer/6).
     :- dynamic(gymLeader/4).
 
     init_game:-

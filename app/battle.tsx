@@ -4,9 +4,13 @@ import EvolutionView from "@/components/EvolutionView";
 import GameLayout, { ActionButton } from "@/components/GameLayout";
 import PokemonTeam from "@/components/PokemonTeam";
 import { isEgg, scaleImage } from "@/utils/helpers";
-import { Egg, FoePokemon, Pokemon } from "@/utils/interfaces";
+import { Egg, FoePokemon, Pokemon, Trainer } from "@/utils/interfaces";
 import { prologService } from "@/utils/PrologService";
-import { pokeballSprites, pokemonSprites } from "@/utils/sprites";
+import {
+  pokeballSprites,
+  pokemonSprites,
+  trainerSprites,
+} from "@/utils/sprites";
 import { router, useLocalSearchParams } from "expo-router";
 import { useEffect, useRef, useState } from "react";
 import {
@@ -40,7 +44,7 @@ export default function BattleScreen() {
   const maxFights = isGym ? Number(fights ?? 1) : 1;
   const [message, setMessage] = useState("...");
   const [buttons, setButtons] = useState<ActionButton[]>(getEmptyButtons());
-  const [enemy, setEnemy] = useState<[FoePokemon, string] | null>(null);
+  const [enemy, setEnemy] = useState<[FoePokemon, Trainer | null]>();
   const [pokemons, setPokemons] = useState<(Pokemon | Egg)[]>([]);
   const [pokemonViewOpen, setPokemonViewOpen] = useState(false);
   const selectedTagRef = useRef(0);
@@ -58,7 +62,7 @@ export default function BattleScreen() {
   const [trainerVisible, setTrainerVisible] = useState(false);
   const [enemyPokemonVisible, setEnemyPokemonVisible] = useState(false);
   const roundRef = useRef(1);
-  const [fight, setFight] = useState(1);
+  const fightRef = useRef(1);
   const [badgeWon, setBadgeWon] = useState("");
   const [animating, setAnimating] = useState(false);
   const [evolutionViewOpen, setEvolutionViewOpen] = useState(false);
@@ -242,10 +246,10 @@ export default function BattleScreen() {
           ? await prologService.getInRouteTrainer()
           : isGym
             ? (await prologService.getGymInfo()).leader
-            : "";
+            : null;
       setEnemy([enemyPokemon, trainer]);
 
-      if (trainer !== "") {
+      if (trainer?.name !== "") {
         setTrainerVisible(true);
       }
 
@@ -260,12 +264,12 @@ export default function BattleScreen() {
         }),
       ]).start(() => {
         setTimeout(() => {
-          if (isGym && trainer !== "") {
+          if (isGym && trainer && trainer.name !== "") {
             setMessage(
-              `Líder de gimnasio ${trainer}\n\nha aceptado tu desafío`,
+              `Líder de gimnasio ${trainer?.name}\n\nha aceptado tu desafío`,
             );
-          } else if (trainer !== "") {
-            setMessage("¡" + trainer + " quiere pelear!");
+          } else if (trainer && trainer.name !== "") {
+            setMessage("¡" + trainer?.name + " quiere pelear!");
           } else {
             setMessage(
               "¡Un " + enemyPokemon.pokemon + " salvaje quiere pelear!",
@@ -577,30 +581,30 @@ export default function BattleScreen() {
 
     if (isGym) {
       if (winner === "player") {
-        if (fight >= maxFights) {
+        if (fightRef.current >= maxFights) {
           await handleGymWin();
         } else {
-          setFight((prev) => prev + 1);
+          fightRef.current += 1;
           roundRef.current = 1;
 
           const newEnemy = await prologService.getEnemyPokemon();
           setEnemy((prev) => (prev ? [newEnemy, prev[1]] : prev));
 
-          Animated.sequence([
-            Animated.timing(enemyPokemonX, {
-              toValue: VIEW_W,
-              duration: 400,
-              useNativeDriver: true,
-            }),
+          Animated.timing(enemyPokemonX, {
+            toValue: VIEW_W,
+            duration: 400,
+            useNativeDriver: true,
+          }).start(async () => {
+            await refreshStats();
             Animated.timing(enemyPokemonX, {
               toValue: 0,
               duration: 400,
               useNativeDriver: true,
-            }),
-          ]).start();
+            }).start();
+          });
 
           setMessage(
-            `¡Ganaste esta pelea!\n\nCombate ${fight} de ${maxFights}`,
+            `¡Ganaste esta pelea!\n\nCombate ${fightRef.current} de ${maxFights}`,
           );
           await prologService.endBattle();
 
@@ -1336,21 +1340,25 @@ export default function BattleScreen() {
             ]}
           >
             {/* trainer */}
-            {enemy[1] !== "" && trainerVisible && (
+            {enemy[1] && enemy[1].name !== "" && trainerVisible && (
               <Animated.Image
-                source={require("../assets/trainer.png")}
+                source={
+                  isGym
+                    ? trainerSprites[enemy[1].name.toLowerCase()]
+                    : trainerSprites[enemy[1].gender]
+                }
                 style={[scaleImage(SPRITE_SIZE, SPRITE_SIZE)]}
                 resizeMode="contain"
               />
             )}
 
-            {enemy[0] && (enemy[1] === "" || !trainerVisible) && (
+            {enemy[0] && (!enemy[1] || !trainerVisible) && (
               <StatsBars
                 pokemon={enemy[0] as unknown as Pokemon}
                 enemy={true}
               />
             )}
-            {enemy[1] === "" ? (
+            {!enemy[1] ? (
               <Animated.Image
                 source={pokemonSprites[enemy[0].pokemon]}
                 style={[

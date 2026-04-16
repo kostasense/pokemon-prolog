@@ -36,6 +36,7 @@ export default function MapScreen() {
   const [pokemons, setPokemons] = useState<(Pokemon | Egg)[]>([]);
   const [eggReady, setEggReady] = useState(0);
   const [eggHatchViewOpen, setEggHatchViewOpen] = useState(false);
+  const [pcViewOpen, setPcViewOpen] = useState(false);
   const [startHatch, setStartHatch] = useState(false);
 
   const pulse = useRef(new Animated.Value(1)).current;
@@ -382,34 +383,44 @@ export default function MapScreen() {
       (l) => l !== playerLocation.place,
     );
 
-    const nextIndex = startIndex === 0 ? 2 : 0;
+    locations.push("PC");
+
+    const actualIndex = startIndex % locations.length;
+    const nextIndex = actualIndex + 2 >= locations.length ? 0 : actualIndex + 2;
+
+    const loc1 = locations[actualIndex];
+    const loc2 = locations[actualIndex + 1];
 
     const newButtons: ActionButton[] = [
       {
-        label: locations[startIndex] ? "Ir a " + locations[startIndex] : "",
+        label: loc1 === "PC" ? "Revisar PC" : loc1 ? "Ir a " + loc1 : "",
         onPress: async () => {
-          const locationSelected = await prologService.moveToLocationInCity(
-            locations[startIndex],
-          );
-          if (locationSelected) {
-            const location = await prologService.getCurrentLocation();
-            setPlayerLocation(location);
-            goMain();
+          if (loc1 === "PC") {
+            setPcViewOpen(true);
+          } else {
+            const locationSelected =
+              await prologService.moveToLocationInCity(loc1);
+            if (locationSelected) {
+              const location = await prologService.getCurrentLocation();
+              setPlayerLocation(location);
+              goMain();
+            }
           }
         },
       },
       {
-        label: locations[startIndex + 1]
-          ? "Ir a " + locations[startIndex + 1]
-          : "",
+        label: loc2 === "PC" ? "Revisar PC" : loc2 ? "Ir a " + loc2 : "",
         onPress: async () => {
-          const locationSelected = await prologService.moveToLocationInCity(
-            locations[startIndex + 1],
-          );
-          if (locationSelected) {
-            const location = await prologService.getCurrentLocation();
-            setPlayerLocation(location);
-            goMain();
+          if (loc2 === "PC") {
+            setPcViewOpen(true);
+          } else {
+            const locationSelected =
+              await prologService.moveToLocationInCity(loc2);
+            if (locationSelected) {
+              const location = await prologService.getCurrentLocation();
+              setPlayerLocation(location);
+              goMain();
+            }
           }
         },
       },
@@ -1125,6 +1136,7 @@ export default function MapScreen() {
             start={startHatch}
           />
         )}
+        {/*{pcViewOpen && ()}*/}
       </View>
     </GameLayout>
   );

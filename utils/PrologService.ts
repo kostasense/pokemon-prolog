@@ -8,6 +8,7 @@ import {
   Location,
   Pokeball,
   Pokemon,
+  Trainer,
 } from "./interfaces";
 
 const query = (goal: string) => prologEngine.queryAll(goal, false);
@@ -265,9 +266,18 @@ export class PrologService {
       "location(Main, Place), gymnasium(Main, Leader, Fights, Badge)",
     );
 
+    const leader: Trainer = {
+      route: 0,
+      name: result[0].Leader.toUpperCase(),
+      gender: "",
+      money: 0,
+      pokemon: "",
+      defeated: "",
+    };
+
     const gym: Gym = {
       city: result[0].Main,
-      leader: result[0].Leader.toUpperCase(),
+      leader: leader,
       fights: result[0].Fights,
       badge: result[0].Badge.toUpperCase(),
     };
@@ -282,13 +292,23 @@ export class PrologService {
     return badge;
   }
 
-  async getInRouteTrainer(): Promise<string> {
+  async getInRouteTrainer(): Promise<Trainer> {
     const route = await this.getInRouteLocation();
 
     const result = await query(
-      `trainer(${route.main}, Trainer, Money, Pokemon, Defeated)`,
+      `trainer(${route.main}, Trainer, Gender, Money, Pokemon, Defeated)`,
     );
-    return result[0].Trainer.toUpperCase();
+
+    const trainer: Trainer = {
+      route: Number(route.main),
+      name: result[0].Trainer.toUpperCase(),
+      gender: result[0].Gender,
+      money: result[0].Money,
+      pokemon: result[0].Pokemon.toUpperCase(),
+      defeated: result[0].Defeated,
+    };
+
+    return trainer;
   }
 
   async choosePokemon(tag: number): Promise<boolean> {

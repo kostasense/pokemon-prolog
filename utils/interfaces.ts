@@ -44,7 +44,16 @@ export interface Pokeball {
 
 export interface Gym {
   city: string;
-  leader: string;
+  leader: Trainer;
   fights: number;
   badge: string;
+}
+
+export interface Trainer {
+  route: number;
+  name: string;
+  gender: string;
+  money: number;
+  pokemon: string;
+  defeated: string;
 }

@@ -55,3 +55,14 @@ export const medalSprites: Record<string, any> = {
   feather: require("../assets/medals/feather.png"),
   rain: require("../assets/medals/rain.png"),
 };
+
+export const trainerSprites: Record<string, any> = {
+  female: require("../assets/female-trainer.png"),
+  male: require("../assets/male-trainer.png"),
+  brawly: require("../assets/leaders/brawly.png"),
+  flannery: require("../assets/leaders/flannery.png"),
+  roxanne: require("../assets/leaders/roxanne.png"),
+  wallace: require("../assets/leaders/wallace.png"),
+  wattson: require("../assets/leaders/wattson.png"),
+  winona: require("../assets/leaders/winona.png"),
+};
