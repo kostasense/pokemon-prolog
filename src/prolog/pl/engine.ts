@@ -42,7 +42,7 @@ export const engine = `
         learnMoves(Learned, T, R).
 
     learnMoves(Learned, [M-locked | T], [M-forgotten | R]):-
-        \\+ member(M, Learned),
+        \+ member(M, Learned),
         move(M, _, _, ML),
         findall(LL, (member(LM, Learned), move(LM, _, _, LL)), LLs),
         min_list(LLs, MinLL),
@@ -87,7 +87,7 @@ export const engine = `
     resolveMove(Move, learned):-
         activePokemon(Tag),
         owned(Tag, A, B, C, D, E, F, G, Moves),
-        getLearned(Moves, Learned),
+        getLearned(Moves, Learned), !,
         length(Learned, Length),
         Length < 4,
         updateMoves(Move, learned, Moves, New),
@@ -182,6 +182,21 @@ export const engine = `
         pokemonMoves(Pokemon, Level, Moves).
 
     % ==== PLAYER ====
+    %!  swapTeamComputer(+Tag, +PC)
+    %   swaps pokemon in team for one saved in computer given its respective tags
+    swapTeamComputer(Team, PC):-
+        backpack(_, _, _, L1),
+        member(Team-ValueT, L1),
+
+        computer(L2),
+        member(PC-ValuePC, L2),
+
+        removeFromTeam(Team),
+        removeFromComputer(PC),
+
+        addToTeam(PC, ValuePC),
+        sendToComputer(Team, ValueT).
+
     %!  addToTeam(+Tag, +Type)
     %   asserts new team with pokemon or egg added
     addToTeam(Tag, Type):-
@@ -194,19 +209,21 @@ export const engine = `
     %!  removeFromTeam(+Tag)
     %   new list with given pokemon or egg removed
     removeFromTeam(Tag):-
-        owned(Tag, Pokemon, _, _, _, _, _, _, _),
         backpack(A, B, C, Team),
-        select(Tag-Pokemon, Team, NewTeam),
+        member(Tag-Value, Team),
+        select(Tag-Value, Team, NewTeam),
 
         retract(backpack(_, _, _, _)),
         asserta(backpack(A, B, C, NewTeam)).
 
-    removeFromTeam(Tag):-
-        backpack(A, B, C, Team),
-        select(Tag-egg, Team, NewTeam),
+    %!  removeFromComputer(+Tag)
+    removeFromComputer(Tag):-
+        computer(All),
+        member(Tag-Value, All),
+        select(Tag-Value, All, New),
 
-        retract(backpack(_, _, _, _)),
-        asserta(backpack(A, B, C, NewTeam)).
+        retract(computer(_)),
+        asserta(computer(New)).
 
     %!  sendToComputer(+Tag, +Type)
     sendToComputer(Tag, Type):-
