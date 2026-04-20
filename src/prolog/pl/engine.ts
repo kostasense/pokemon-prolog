@@ -42,7 +42,7 @@ export const engine = `
         learnMoves(Learned, T, R).
 
     learnMoves(Learned, [M-locked | T], [M-forgotten | R]):-
-        \+ member(M, Learned),
+        \\+ member(M, Learned),
         move(M, _, _, ML),
         findall(LL, (member(LM, Learned), move(LM, _, _, LL)), LLs),
         min_list(LLs, MinLL),

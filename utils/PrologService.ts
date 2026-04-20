@@ -501,6 +501,16 @@ export class PrologService {
 
     return pokemons;
   }
+
+  async releasePokemon(tag: number): Promise<boolean> {
+    const results = prove(`removeFromComputer(${tag})`);
+    return results;
+  }
+
+  async swapPokemons(tagTeam: number, tagPC: number): Promise<boolean> {
+    const results = prove(`swapTeamComputer(${tagTeam}, ${tagPC})`);
+    return results;
+  }
 }
 
 export const prologService = new PrologService();

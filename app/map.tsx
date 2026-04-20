@@ -16,7 +16,7 @@ import { medalSprites, pokeballSprites } from "@/utils/sprites";
 import { router } from "expo-router";
 import GameLayout, { ActionButton } from "../components/GameLayout";
 import { getLocationById } from "../constants/mapLocations";
-import { scaleImage } from "../utils/helpers";
+import { isEgg, scaleImage } from "../utils/helpers";
 import { Egg, Location, Pokeball, Pokemon } from "../utils/interfaces";
 import { prologService } from "../utils/PrologService";
 
@@ -39,9 +39,12 @@ export default function MapScreen() {
   const [eggHatchViewOpen, setEggHatchViewOpen] = useState(false);
   const [pcViewOpen, setPcViewOpen] = useState(false);
   const [startHatch, setStartHatch] = useState(false);
-  const [selectedPokemonPc, setSelectedPokemonPc] = useState<Pokemon | Egg>();
-  const [pcPokemons, setPcPokemons] = useState<(Pokemon | Egg)[]>([]);
+  const [selectedPokemonPc, setSelectedPokemonPc] = useState<
+    Pokemon | Egg | null
+  >();
   const selectedTagRef = useRef(0);
+  const onSelectOverrideRef = useRef<((tag: number) => void) | null>(null);
+  const [pcPagePokemons, setPcPagePokemons] = useState<(Pokemon | Egg)[]>([]);
 
   const pulse = useRef(new Animated.Value(1)).current;
 
@@ -1102,14 +1105,29 @@ export default function MapScreen() {
     }
   }
 
-  async function handlePC() {
+  async function handlePC(page = 0) {
     setPcViewOpen(true);
     const pcPokemonsFetched = await prologService.getPCPokemons();
-    setPcPokemons(pcPokemonsFetched);
-    setMessage("Selecciona un Pokémon");
+
+    const totalPages = Math.ceil(pcPokemonsFetched.length / 20);
+    const start = page * 20;
+    const pagePokemons = pcPokemonsFetched.slice(start, start + 20);
+    setPcPagePokemons(pagePokemons);
+
+    setMessage(`PC`);
     setButtons([
-      { label: "", onPress: () => {} },
-      { label: "", onPress: () => {} },
+      {
+        label: page > 0 ? "← Anterior" : "",
+        onPress: () => {
+          if (page > 0) handlePC(page - 1);
+        },
+      },
+      {
+        label: page < totalPages - 1 ? "Siguiente →" : "",
+        onPress: () => {
+          if (page < totalPages - 1) handlePC(page + 1);
+        },
+      },
       {
         label: "← Volver",
         onPress: () => {
@@ -1121,21 +1139,31 @@ export default function MapScreen() {
     ]);
   }
 
-  function handlePCSelect(pokemon: Pokemon | Egg) {
+  async function handlePCSelect(pokemon: Pokemon | Egg) {
+    const updatedPokemons = await prologService.getTeamPokemons();
+    setPokemons(updatedPokemons);
+
     setSelectedPokemonPc(pokemon);
-    setMessage(pokemon.pokemon + " seleccionado");
+
+    if (isEgg(pokemon)) {
+      setMessage("Huevo seleccionado");
+    } else {
+      setMessage(pokemon.pokemon + " seleccionado");
+    }
+
     setButtons([
       {
         label: "Liberar",
         onPress: async () => {
-          // pendiente
+          await prologService.releasePokemon(pokemon.tag);
+          setPcViewOpen(false);
+          setSelectedPokemonPc(null);
           setMessage("Pokémon liberado");
           setButtons([
             { label: "", onPress: () => {} },
             {
               label: "Siguiente →",
               onPress: () => {
-                setPcViewOpen(false);
                 goMain();
               },
             },
@@ -1149,20 +1177,28 @@ export default function MapScreen() {
         onPress: () => {
           setPokemonViewOpen(true);
           setMessage("Elige el Pokémon del equipo:");
-          setButtons([
+          selectedTagRef.current = 0;
+
+          const buildButtons = (tag: number) => [
             { label: "", onPress: () => {} },
             {
-              label: "Aceptar →",
+              label: tag !== 0 ? "Aceptar →" : "",
               onPress: async () => {
-                // pendiente — usar selectedTagRef.current como teamTag
+                if (tag === 0) return;
+                await prologService.swapPokemons(
+                  selectedTagRef.current,
+                  pokemon.tag,
+                );
                 setPokemonViewOpen(false);
+                setPcViewOpen(false);
+                onSelectOverrideRef.current = null;
+                setSelectedPokemonPc(null);
                 setMessage("Cambio realizado");
                 setButtons([
                   { label: "", onPress: () => {} },
                   {
                     label: "Siguiente →",
                     onPress: () => {
-                      setPcViewOpen(false);
                       goMain();
                     },
                   },
@@ -1171,12 +1207,29 @@ export default function MapScreen() {
                 ]);
               },
             },
-            { label: "← Volver", onPress: () => handlePCSelect(pokemon) },
+            {
+              label: "← Volver",
+              onPress: () => {
+                setPokemonViewOpen(false);
+                onSelectOverrideRef.current = null;
+                handlePCSelect(pokemon);
+              },
+            },
             { label: "", onPress: () => {} },
-          ]);
+          ];
+
+          setButtons(buildButtons(0));
+          onSelectOverrideRef.current = (tag) => setButtons(buildButtons(tag));
         },
       },
-      { label: "← Volver", onPress: () => handlePC() },
+      {
+        label: "← Volver",
+        onPress: () => {
+          setPcViewOpen(false);
+          setSelectedPokemonPc(null);
+          goMain();
+        },
+      },
       { label: "", onPress: () => {} },
     ]);
   }
@@ -1212,11 +1265,19 @@ export default function MapScreen() {
             )}
           </View>
         </ScrollView>
+        {pcViewOpen && (
+          <PCView
+            pcPokemons={pcPagePokemons}
+            selectedPokemon={selectedPokemonPc}
+            onSelectPokemon={(p) => handlePCSelect(p)}
+          />
+        )}
         {pokemonViewOpen && (
           <PokemonTeam
             pokemons={pokemons}
             onSelect={(tag) => {
               selectedTagRef.current = tag;
+              onSelectOverrideRef.current?.(tag);
             }}
           />
         )}
@@ -1224,13 +1285,6 @@ export default function MapScreen() {
           <EggHatchView
             egg={pokemons.find((p) => p.tag === eggReady) as Egg}
             start={startHatch}
-          />
-        )}
-        {pcViewOpen && (
-          <PCView
-            pcPokemons={pcPokemons}
-            selectedPokemon={selectedPokemonPc}
-            onSelectPokemon={(p) => handlePCSelect(p)}
           />
         )}
       </View>

@@ -1,7 +1,9 @@
-import { scaleImage } from "@/utils/helpers";
+import { isEgg, scaleImage } from "@/utils/helpers";
 import { Egg, Pokemon } from "@/utils/interfaces";
 import { pokemonPCSprites } from "@/utils/sprites";
+import { useEffect, useRef } from "react";
 import {
+  Animated,
   Dimensions,
   Image,
   StyleSheet,
@@ -17,10 +19,79 @@ const { height: SCREEN_H } = Dimensions.get("window");
 const VIEW_W = Math.min(SCREEN_W, MAP_W);
 const VIEW_H = Math.min(SCREEN_H, MAP_H);
 
+const IS_NARROW = SCREEN_W < MAP_W;
+const COLS = IS_NARROW ? 4 : 5;
+const ROWS = IS_NARROW ? 5 : 4;
+
 const GRID_H = VIEW_H * 0.6;
 const CARD_H = VIEW_H * 0.4;
-const SLOT_W = VIEW_W / 5;
-const SLOT_H = GRID_H / 4;
+const SLOT_W = VIEW_W / COLS;
+const SLOT_H = GRID_H / ROWS;
+
+function PokemonSlot({
+  p,
+  isSelected,
+  onPress,
+}: {
+  p: Pokemon | Egg;
+  isSelected: boolean;
+  onPress: () => void;
+}) {
+  const jumping = useRef(new Animated.Value(0)).current;
+  const anim = useRef<Animated.CompositeAnimation | null>(null);
+
+  useEffect(() => {
+    if (isSelected) {
+      anim.current = Animated.loop(
+        Animated.sequence([
+          Animated.timing(jumping, {
+            toValue: 1,
+            duration: 150,
+            useNativeDriver: true,
+          }),
+          Animated.timing(jumping, {
+            toValue: -1,
+            duration: 150,
+            useNativeDriver: true,
+          }),
+          Animated.timing(jumping, {
+            toValue: 0,
+            duration: 150,
+            useNativeDriver: true,
+          }),
+        ]),
+      );
+      anim.current.start();
+    } else {
+      anim.current?.stop();
+      jumping.setValue(0);
+    }
+  }, [isSelected, jumping]);
+
+  const jumpY = jumping.interpolate({
+    inputRange: [-1, 0, 1],
+    outputRange: [3, 0, -3],
+  });
+
+  return (
+    <TouchableOpacity style={styles.slot} activeOpacity={0.7} onPress={onPress}>
+      <Animated.Image
+        source={
+          isEgg(p)
+            ? require("../assets/huevo.png")
+            : pokemonPCSprites[p.pokemon.toLowerCase()]
+        }
+        style={[
+          isEgg(p)
+            ? scaleImage(SLOT_W / 3, SLOT_H / 3.5)
+            : scaleImage(SLOT_W, SLOT_H),
+          { transform: [{ translateY: jumpY }] },
+        ]}
+        resizeMode="contain"
+      />
+    </TouchableOpacity>
+  );
+}
 
 export default function PCView({
   pcPokemons,
@@ -31,44 +102,37 @@ export default function PCView({
   selectedPokemon?: Pokemon | Egg | null;
   onSelectPokemon: (pokemon: Pokemon | Egg) => void;
 }) {
-  const slots = Array.from({ length: 20 }, (_, i) => pcPokemons[i] ?? null);
+  const slots = Array.from(
+    { length: COLS * ROWS },
+    (_, i) => pcPokemons[i] ?? null,
+  );
 
   return (
     <View style={styles.overlay}>
-      {/* Grid superior — 20 slots */}
       <View style={styles.gridContainer}>
         <Image
           source={require("../assets/message.png")}
-          style={StyleSheet.absoluteFill}
+          style={[StyleSheet.absoluteFill, scaleImage(VIEW_W, GRID_H)]}
           resizeMode="stretch"
         />
         <View style={styles.grid}>
-          {slots.map((p, i) => (
-            <TouchableOpacity
-              key={i}
-              style={[
-                styles.slot,
-                selectedPokemon &&
-                  p &&
-                  selectedPokemon.tag === p.tag &&
-                  styles.slotSelected,
-              ]}
-              activeOpacity={0.7}
-              onPress={() => p && onSelectPokemon(p)}
-            >
-              {p && (
-                <Image
-                  source={pokemonPCSprites[p.pokemon.toLowerCase()]}
-                  style={scaleImage(SLOT_W * 0.75, SLOT_H * 0.75)}
-                  resizeMode="contain"
-                />
-              )}
-            </TouchableOpacity>
-          ))}
+          {slots.map((p, i) =>
+            p ? (
+              <PokemonSlot
+                key={i}
+                p={p}
+                isSelected={
+                  !!(selectedPokemon && selectedPokemon.tag === p.tag)
+                }
+                onPress={() => onSelectPokemon(p)}
+              />
+            ) : (
+              <View key={i} style={styles.slot} />
+            ),
+          )}
         </View>
       </View>
 
-      {/* Card inferior */}
       <View style={styles.cardArea}>
         <PokemonCard pokemon={selectedPokemon ?? null} />
       </View>
@@ -87,28 +151,22 @@ const styles = StyleSheet.create({
   gridContainer: {
     width: VIEW_W,
     height: GRID_H,
-    justifyContent: "center",
-    alignItems: "center",
   },
   grid: {
-    flexDirection: "row",
-    flexWrap: "wrap",
+    position: "absolute",
+    top: 0,
+    left: 0,
     width: VIEW_W,
     height: GRID_H,
-    padding: 4,
+    flexDirection: "row",
+    flexWrap: "wrap",
+    padding: 10,
   },
   slot: {
     width: SLOT_W,
     height: SLOT_H,
     justifyContent: "center",
     alignItems: "center",
-    borderWidth: 1,
-    borderColor: "rgba(255,255,255,0.2)",
-  },
-  slotSelected: {
-    backgroundColor: "rgba(255, 255, 100, 0.35)",
-    borderColor: "yellow",
-    borderWidth: 2,
   },
   cardArea: {
     width: VIEW_W,
