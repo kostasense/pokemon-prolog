@@ -84,14 +84,11 @@ export class PrologService {
       }
     }
 
-    console.log(pokemons);
-
     return pokemons;
   }
 
   async getBackpackContent(): Promise<Backpack> {
     const result = await query("backpack(Money, Medals, Pokeballs, Team)");
-    console.log(result);
     const backpack: Backpack = {
       money: result[0].Money,
       medals: result[0].Medals,
@@ -334,7 +331,6 @@ export class PrologService {
 
     if (select) {
       result = await prove("hitEnemy");
-      console.log(result);
     }
 
     return result;
@@ -363,10 +359,7 @@ export class PrologService {
 
   async getGymGainedExp(): Promise<{ tag: number; exp: number }[]> {
     const result = await query("gymExp(Pairs)");
-    console.log(result);
     const pairs = result[0].Pairs;
-
-    console.log("Gym Gained Exp Pairs: ", pairs);
 
     return pairs.map((pair: any) => ({
       tag: pair.args[0],
@@ -496,8 +489,6 @@ export class PrologService {
         pokemons.push(pokemon);
       }
     }
-
-    console.log(pokemons);
 
     return pokemons;
   }

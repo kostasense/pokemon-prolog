@@ -433,7 +433,6 @@ export default function BattleScreen() {
 
   async function handlePlayerMove(move: string) {
     const enemyHit = await prologService.hitEnemyWithMove(move);
-    console.log(enemyHit);
     if (!enemyHit) return;
 
     await refreshStats();
@@ -744,8 +743,6 @@ export default function BattleScreen() {
 
         const isTeamDead = await prologService.checkIfTeamNuked();
 
-        console.log("isTeamDead: ", isTeamDead);
-
         if (isTeamDead) {
           setMessage("¡Tu equipo ha sido derrotado!");
           await prologService.endBattle();
@@ -801,8 +798,6 @@ export default function BattleScreen() {
     } else {
       const exp = await prologService.getGainedExp();
       const money = await prologService.getGainedMoney();
-
-      console.log("exp: ", exp);
 
       const resultMsg =
         winner === "player"
