@@ -451,6 +451,56 @@ export class PrologService {
 
     return results;
   }
+
+  async getPCPokemons(): Promise<(Pokemon | Egg)[]> {
+    const result = await query(`computer(Pokemons)`);
+
+    const pokemons: (Pokemon | Egg)[] = [];
+    for (const pair of result[0].Pokemons) {
+      const tag = pair.args[0];
+      const name = pair.args[1];
+
+      if (name === "egg") {
+        const result = await query(`playerEggs(${tag}, Pokemon, DistanceLeft)`);
+
+        const webo: Egg = {
+          tag: tag,
+          pokemon: result[0].Pokemon.toUpperCase(),
+          distanceLeft: result[0].DistanceLeft,
+        };
+
+        pokemons.push(webo);
+      } else {
+        const result = await query(
+          `owned(${tag}, Pokemon, State, Level, Atk, CurrentHP, MaxHP, Exp, Moves)`,
+        );
+
+        const pokemon: Pokemon = {
+          tag: tag,
+          pokemon: result[0].Pokemon.toUpperCase(),
+          state: result[0].State.toUpperCase(),
+          level: result[0].Level,
+          atk: result[0].Atk,
+          currentHp: result[0].CurrentHP,
+          maxHp: result[0].MaxHP,
+          exp: result[0].Exp,
+          moves: [],
+        };
+
+        for (const pairMoves of result[0].Moves) {
+          if (pairMoves.args[1] === "learned") {
+            pokemon.moves.push(pairMoves.args[0]);
+          }
+        }
+
+        pokemons.push(pokemon);
+      }
+    }
+
+    console.log(pokemons);
+
+    return pokemons;
+  }
 }
 
 export const prologService = new PrologService();
