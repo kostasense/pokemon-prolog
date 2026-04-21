@@ -1,7 +1,13 @@
 import { useFonts } from "expo-font";
 import { Slot } from "expo-router";
 import { useEffect, useState } from "react";
-import { ActivityIndicator, StyleSheet, Text, View } from "react-native";
+import {
+  ActivityIndicator,
+  BackHandler,
+  StyleSheet,
+  Text,
+  View,
+} from "react-native";
 import { prologEngine } from "../src/prolog/PrologEngine";
 import { dynamics } from "../src/prolog/pl/dynamics";
 import { engine } from "../src/prolog/pl/engine";
@@ -16,6 +22,11 @@ export default function RootLayout() {
   const [fontsLoaded, fontError] = useFonts({
     GameFont: require("../assets/pokemon.ttf"),
   });
+
+  useEffect(() => {
+    const sub = BackHandler.addEventListener("hardwareBackPress", () => true);
+    return () => sub.remove();
+  }, []);
 
   //const full = [dynamics, pokemon, engine, map, trainers].join("\n");
   //const lines = full.split("\n");

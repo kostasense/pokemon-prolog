@@ -4,7 +4,7 @@
     "slug": "pokemon-prolog",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/images/icon.png",
+    "icon": "./assets/balls/pokeball.png",
     "scheme": "pokemonprolog",
     "userInterfaceStyle": "automatic",
     "jsEngine": "jsc",
@@ -25,7 +25,7 @@
     },
     "web": {
       "output": "static",
-      "favicon": "./assets/images/favicon.png"
+      "favicon": "./assets/balls/pokeball.png"
     },
     "plugins": [
       "expo-router",
