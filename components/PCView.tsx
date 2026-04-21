@@ -78,7 +78,7 @@ function PokemonSlot({
       <Animated.Image
         source={
           isEgg(p)
-            ? require("../assets/huevo.png")
+            ? require("../assets/huevo_static.png")
             : pokemonPCSprites[p.pokemon.toLowerCase()]
         }
         style={[
