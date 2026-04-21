@@ -51,6 +51,7 @@
       "eas": {
         "projectId": "4cc2c517-357f-46fb-9fb6-af32475b7af8"
       }
-    }
+    },
+    "fonts": ["./assets/pokemon.ttf"]
   }
 }

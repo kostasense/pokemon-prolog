@@ -65,7 +65,7 @@ export default function MapScreen() {
     );
     anim.start();
     return () => anim.stop();
-  });
+  }, []);
 
   useEffect(() => {
     async function loadData() {
@@ -1251,7 +1251,7 @@ export default function MapScreen() {
               style={scaleImage(MAP_W, MAP_H)}
               resizeMode="cover"
             />
-            {location && (
+            {playerLocation && (
               <Animated.Image
                 source={require("../assets/head.png")}
                 style={[
