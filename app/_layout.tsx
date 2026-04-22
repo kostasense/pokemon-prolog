@@ -28,12 +28,6 @@ export default function RootLayout() {
     return () => sub.remove();
   }, []);
 
-  //const full = [dynamics, pokemon, engine, map, trainers].join("\n");
-  //const lines = full.split("\n");
-  //console.log("Línea 254:", lines[254]);
-  //console.log("Línea 255:", lines[255]);
-  //console.log("Línea 256:", lines[256]);
-
   useEffect(() => {
     (async () => {
       try {
@@ -50,21 +44,19 @@ export default function RootLayout() {
         setPrologError(e.message);
       }
     })();
-  }, [fontsLoaded, fontError]);
+  }, []);
 
-  if (!fontsLoaded && !fontError) return null;
+  if (!fontsLoaded) return null;
 
   return (
     <View style={styles.root}>
       <Slot />
-
       {!prologReady && !prologError && (
         <View style={styles.overlay}>
           <ActivityIndicator size="large" color="#fff" />
           <Text style={styles.loadingText}>Iniciando motor Prolog...</Text>
         </View>
       )}
-
       {prologError && (
         <View style={[styles.overlay, styles.overlayError]}>
           <Text style={styles.errorText}>
