@@ -1,4 +1,4 @@
-import { useFonts } from "expo-font";
+import * as Font from "expo-font";
 import { Slot } from "expo-router";
 import { useEffect, useState } from "react";
 import {
@@ -18,10 +18,7 @@ import { trainers } from "../src/prolog/pl/trainers";
 export default function RootLayout() {
   const [prologReady, setPrologReady] = useState(false);
   const [prologError, setPrologError] = useState<string | null>(null);
-
-  const [fontsLoaded, fontError] = useFonts({
-    GameFont: require("../assets/pokemon.ttf"),
-  });
+  const [appReady, setAppReady] = useState(false);
 
   useEffect(() => {
     const sub = BackHandler.addEventListener("hardwareBackPress", () => true);
@@ -29,24 +26,36 @@ export default function RootLayout() {
   }, []);
 
   useEffect(() => {
-    (async () => {
+    async function init() {
       try {
-        await prologEngine.loadPrograms([
-          dynamics,
-          pokemon,
-          engine,
-          map,
-          trainers,
+        // Carga fuente y Prolog en paralelo
+        await Promise.all([
+          Font.loadAsync({ GameFont: require("../assets/pokemon.ttf") }),
+          (async () => {
+            await prologEngine.loadPrograms([
+              dynamics,
+              pokemon,
+              engine,
+              map,
+              trainers,
+            ]);
+            await prologEngine.queryOne("init_game");
+            setPrologReady(true);
+          })(),
         ]);
-        await prologEngine.queryOne("init_game");
-        setPrologReady(true);
       } catch (e: any) {
-        setPrologError(e.message);
+        // La fuente falló pero dejamos pasar — Prolog puede haber cargado bien
+        console.warn("Init error:", e.message);
+        setPrologError(e.message.includes("prolog") ? e.message : null);
+        setPrologReady(true);
+      } finally {
+        setAppReady(true); // ✅ siempre desbloquea la app
       }
-    })();
+    }
+    init();
   }, []);
 
-  if (!fontsLoaded) return null;
+  if (!appReady) return null;
 
   return (
     <View style={styles.root}>
@@ -70,9 +79,7 @@ export default function RootLayout() {
 }
 
 const styles = StyleSheet.create({
-  root: {
-    flex: 1,
-  },
+  root: { flex: 1 },
   overlay: {
     ...StyleSheet.absoluteFillObject,
     backgroundColor: "rgba(0,0,0,0.72)",
@@ -80,14 +87,8 @@ const styles = StyleSheet.create({
     alignItems: "center",
     gap: 14,
   },
-  overlayError: {
-    backgroundColor: "rgba(80,0,0,0.88)",
-  },
-  loadingText: {
-    fontFamily: "GameFont",
-    color: "#fff",
-    fontSize: 14,
-  },
+  overlayError: { backgroundColor: "rgba(80,0,0,0.88)" },
+  loadingText: { fontFamily: "GameFont", color: "#fff", fontSize: 14 },
   errorText: {
     fontFamily: "GameFont",
     color: "#ff6b6b",
