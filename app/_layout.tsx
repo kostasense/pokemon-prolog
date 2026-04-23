@@ -24,7 +24,7 @@ export default function RootLayout() {
   const [appReady, setAppReady] = useState(false);
 
   const [fontsLoaded, fontError] = useFonts({
-    GameFont: require("../assets/pokemon.ttf"),
+    GameFont: require("../assets/GameFont.ttf"),
   });
 
   useEffect(() => {
