@@ -1,4 +1,6 @@
+import { useFonts } from "expo-font";
 import { Slot } from "expo-router";
+import * as SplashScreen from "expo-splash-screen";
 import { useEffect, useState } from "react";
 import {
   ActivityIndicator,
@@ -14,10 +16,16 @@ import { map } from "../src/prolog/pl/map";
 import { pokemon } from "../src/prolog/pl/pokemon";
 import { trainers } from "../src/prolog/pl/trainers";
 
+SplashScreen.preventAutoHideAsync();
+
 export default function RootLayout() {
   const [prologReady, setPrologReady] = useState(false);
   const [prologError, setPrologError] = useState<string | null>(null);
   const [appReady, setAppReady] = useState(false);
+
+  const [fontsLoaded, fontError] = useFonts({
+    GameFont: require("../assets/pokemon.ttf"),
+  });
 
   useEffect(() => {
     const sub = BackHandler.addEventListener("hardwareBackPress", () => true);
@@ -47,7 +55,13 @@ export default function RootLayout() {
     init();
   }, []);
 
-  if (!appReady) return null;
+  useEffect(() => {
+    if ((fontsLoaded || fontError) && appReady) {
+      SplashScreen.hideAsync();
+    }
+  }, [fontsLoaded, fontError, appReady]);
+
+  if (!appReady || (!fontsLoaded && !fontError)) return null;
 
   return (
     <View style={styles.root}>
