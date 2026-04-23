@@ -13,10 +13,6 @@
       "supportsTablet": true
     },
     "android": {
-      "compileSdkVersion": 34,
-      "targetSdkVersion": 34,
-      "buildToolsVersion": "34.0.0",
-      "kotlinVersion": "2.1.0",
       "edgeToEdgeEnabled": false,
       "predictiveBackGestureEnabled": false,
       "package": "com.kostasense.pokemonprolog",
@@ -50,8 +46,14 @@
             "compileSdkVersion": 34,
             "targetSdkVersion": 34,
             "buildToolsVersion": "34.0.0",
-            "kotlinVersion": "1.9.0"
+            "kotlinVersion": "2.1.0"
           }
+        }
+      ],
+      [
+        "expo-font",
+        {
+          "fonts": ["./assets/pokemon.ttf"]
         }
       ]
     ],

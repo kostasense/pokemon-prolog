@@ -1,4 +1,3 @@
-import * as Font from "expo-font";
 import { Slot } from "expo-router";
 import { useEffect, useState } from "react";
 import {
@@ -28,28 +27,21 @@ export default function RootLayout() {
   useEffect(() => {
     async function init() {
       try {
-        // Carga fuente y Prolog en paralelo
-        await Promise.all([
-          Font.loadAsync({ GameFont: require("../assets/pokemon.ttf") }),
-          (async () => {
-            await prologEngine.loadPrograms([
-              dynamics,
-              pokemon,
-              engine,
-              map,
-              trainers,
-            ]);
-            await prologEngine.queryOne("init_game");
-            setPrologReady(true);
-          })(),
+        await prologEngine.loadPrograms([
+          dynamics,
+          pokemon,
+          engine,
+          map,
+          trainers,
         ]);
+        await prologEngine.queryOne("init_game");
+        setPrologReady(true);
       } catch (e: any) {
-        // La fuente falló pero dejamos pasar — Prolog puede haber cargado bien
         console.warn("Init error:", e.message);
-        setPrologError(e.message.includes("prolog") ? e.message : null);
+        setPrologError(e.message);
         setPrologReady(true);
       } finally {
-        setAppReady(true); // ✅ siempre desbloquea la app
+        setAppReady(true);
       }
     }
     init();
